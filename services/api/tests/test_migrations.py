@@ -1191,3 +1191,27 @@ def test_the_restore_is_armed_before_the_upgrade_not_after(
     # And withdrawn once the upgrade survived, so an ordinary start does not
     # roll itself back.
     assert not marker.exists()
+
+
+def test_a_brand_new_database_is_not_snapshotted(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """There is nothing to restore to, and trying produced a traceback on the
+    first launch of every new install - describing a loss that cannot happen."""
+
+    settings = Settings(data_dir=tmp_path / "first-launch")
+    settings.prepare()
+
+    with caplog.at_level("WARNING"):
+        upgrade_database(settings)
+
+    assert not list(settings.backup_dir.glob("*.sqlite3"))
+    assert not (settings.state_dir / "restore-on-next-start.json").exists()
+    assert "Could not snapshot" not in caplog.text
+    # And it really did upgrade.
+    assert _recorded_revisions_for(settings)
+
+
+def _recorded_revisions_for(settings: Settings) -> set[str]:
+    with closing(sqlite3.connect(settings.state_dir / "local-lm.sqlite3")) as connection:
+        return {row[0] for row in connection.execute("SELECT version_num FROM alembic_version")}

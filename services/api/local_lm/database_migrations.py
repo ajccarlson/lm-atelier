@@ -49,13 +49,22 @@ def _recorded_revisions(database: Path) -> set[str]:
     return {str(row[0]) for row in rows}
 
 
-def _upgrade_is_pending(config: Config, settings: Settings) -> bool:
+def _upgrade_plan(config: Config, settings: Settings) -> tuple[bool, bool]:
+    """Whether an upgrade has work to do, and whether anything could be lost.
+
+    A database with no recorded revision has nothing to restore to. Snapshotting
+    one fails verification - there is not yet an `alembic_version` table to
+    verify - and the warning that follows is a traceback on the first launch of
+    every new install, describing a loss that cannot happen.
+    """
+
     database = settings.state_dir / "local-lm.sqlite3"
+    recorded = _recorded_revisions(database)
     try:
         heads = set(ScriptDirectory.from_config(config).get_heads())
     except CommandError:
-        return True
-    return _recorded_revisions(database) != heads
+        return True, bool(recorded)
+    return recorded != heads, bool(recorded)
 
 
 def upgrade_database(settings: Settings) -> None:
@@ -77,7 +86,8 @@ def upgrade_database(settings: Settings) -> None:
     config = alembic_config(settings)
     manager = BackupManager(settings)
     snapshot: str | None = None
-    if _upgrade_is_pending(config, settings):
+    pending, recoverable = _upgrade_plan(config, settings)
+    if pending and recoverable:
         try:
             snapshot = manager.create().name
             # Armed before the work, not after it. An exception handler only
