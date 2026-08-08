@@ -354,7 +354,12 @@ async def test_security_headers_block_remote_active_content_and_preserve_stricte
     csp = response.headers["content-security-policy"]
     assert "script-src 'self'" in csp
     assert "img-src 'self' data: blob:" in csp
-    assert "connect-src 'self' ws://127.0.0.1:* ws://localhost:*" in csp
+    connect_directive = next(
+        directive.strip()
+        for directive in csp.split(";")
+        if directive.strip().startswith("connect-src")
+    )
+    assert connect_directive == "connect-src 'self' ws://127.0.0.1:* ws://localhost:*"
     assert "frame-ancestors 'none'" in csp
     assert "https:" not in csp
     assert response.headers["referrer-policy"] == "no-referrer"

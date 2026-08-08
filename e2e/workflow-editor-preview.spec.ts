@@ -11,9 +11,6 @@ const WORKFLOW_NAME = "Synthetic browser protocol fixture";
 const INITIAL_LABEL = "camera";
 const EDITED_LABEL = "studio";
 const MANUAL_PROTOCOL_LABEL = "manual-protocol-load";
-const KNOWN_LOOPBACK_CSP_WARNING =
-  "The source list for the Content Security Policy directive 'connect-src' contains an invalid source: 'ws://[::1]:*'. It will be ignored.";
-
 type WorkflowRevision = {
   id: string;
   version: number;
@@ -272,7 +269,7 @@ test("certifies the synthetic native-editor browser protocol without claiming ma
   const watchPage = (candidate: Page) => {
     candidate.on("pageerror", (error) => browserErrors.push(error.message));
     candidate.on("console", (message) => {
-      if (message.type() === "error" && message.text() !== KNOWN_LOOPBACK_CSP_WARNING) {
+      if (message.type() === "error") {
         browserErrors.push(message.text());
       }
     });

@@ -19,7 +19,7 @@ SECURITY_HEADERS = {
     b"content-security-policy": (
         b"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
         b"img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; "
-        b"connect-src 'self' ws://127.0.0.1:* ws://localhost:* ws://[::1]:*; "
+        b"connect-src 'self' ws://127.0.0.1:* ws://localhost:*; "
         b"worker-src 'self' blob:; object-src 'none'; base-uri 'none'; "
         b"form-action 'self'; frame-ancestors 'none'"
     ),
