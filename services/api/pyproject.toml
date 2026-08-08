@@ -12,7 +12,7 @@ maintainers = [{ name = "ajccarlson" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "alembic>=1.16,<2",
-  "fastapi>=0.116,<1",
+  "fastapi>=0.140.13,<1",
   "huggingface-hub>=1.24.0,<2",
   "httpx>=0.28,<1",
   "keyring>=25,<26",
