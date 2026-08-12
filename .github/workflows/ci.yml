@@ -11,8 +11,16 @@ on:
 permissions:
   contents: read
 
+# The event action is part of the identity on purpose. With one group per pull
+# request, a draft `synchronize` and the `ready_for_review` that follows it
+# cancel each other, and the survivor is whichever GitHub started last. That is
+# how a non-draft pull request came to report every required check as "skipped"
+# while its last real run had tested an earlier commit.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: >-
+    ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{
+      github.event_name == 'pull_request' && github.event.action || github.event_name
+    }}
   cancel-in-progress: true
 
 jobs:
@@ -152,6 +160,73 @@ jobs:
       - name: Confirm exact develop promotion
         if: needs.verification-plan.outputs.mode == 'promotion'
         run: echo Protected develop is ready for exact-tree promotion to main.
+
+  # The required context that cannot be satisfied by absence.
+  #
+  # A GitHub ruleset treats a *skipped* required check as satisfied, so every
+  # job in this file guarding itself with `if: draft == false` leaves a draft
+  # pull request looking exactly like a fully verified one. This job runs with
+  # `if: always()`, so it always produces a real conclusion, and it fails unless
+  # the jobs the plan actually required for this head succeeded.
+  #
+  # It must be listed as a required check in the branch ruleset. Nothing here
+  # changes the ruleset - that is a separate, deliberate step.
+  merge-gate:
+    name: Merge gate
+    if: always() && github.event_name == 'pull_request'
+    needs: [verification-plan, compatibility, windows-compatibility]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require real verification for this exact head
+        env:
+          DRAFT: ${{ github.event.pull_request.draft }}
+          ACTION: ${{ github.event.action }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PLAN: ${{ needs.verification-plan.result }}
+          UBUNTU: ${{ needs.compatibility.result }}
+          WINDOWS: ${{ needs.windows-compatibility.result }}
+          WINDOWS_REQUIRED: ${{ needs.verification-plan.outputs.windows }}
+        run: |
+          set -euo pipefail
+          echo "action=$ACTION draft=$DRAFT head=$HEAD_SHA"
+          echo "plan=$PLAN ubuntu=$UBUNTU windows=$WINDOWS windows_required=$WINDOWS_REQUIRED"
+
+          # A draft is not a verified state, so it must not leave a *successful*
+          # required context attached to its head. Exiting zero here would mean
+          # that if the later ready_for_review run is ever lost - which is the
+          # exact failure this job exists for - the same commit still carries a
+          # green merge gate and can be merged untested.
+          if [ "$DRAFT" = "true" ]; then
+            echo "Draft pull request: full verification is deferred until ready_for_review."
+            echo "Failing closed so this head is never authorized while it is a draft."
+            exit 1
+          fi
+
+          if [ "$PLAN" != "success" ]; then
+            echo "The verification plan did not succeed for $HEAD_SHA (result: $PLAN)."
+            exit 1
+          fi
+          if [ "$UBUNTU" != "success" ]; then
+            echo "Ubuntu compatibility did not succeed for $HEAD_SHA (result: $UBUNTU)."
+            echo "A skipped or cancelled job is not a passing one."
+            exit 1
+          fi
+
+          # Windows is conditional: the plan decides whether this change needs
+          # it. Demanding it unconditionally would fail every documentation
+          # change, and ignoring it would let the gate go green while a
+          # plan-required Windows leg was still running or had already failed.
+          if [ "$WINDOWS_REQUIRED" = "true" ]; then
+            if [ "$WINDOWS" != "success" ]; then
+              echo "The plan required Windows compatibility and it did not succeed (result: $WINDOWS)."
+              exit 1
+            fi
+          else
+            echo "The plan did not require Windows compatibility for this change."
+          fi
+
+          echo "Merge gate green for $HEAD_SHA."
 
   windows-compatibility:
     name: Windows compatibility

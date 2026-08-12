@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -229,6 +231,133 @@ def validate_untrusted_triggers(path: Path, content: str) -> list[str]:
     return errors
 
 
+# The merge gate is the only required context that cannot be satisfied by a job
+# not running, so it is the only thing standing between a draft-skipped pull
+# request and a merge with no verification. Checking that it *exists* would be
+# checking the wrong thing - the first version of it existed and still exited
+# zero on a draft, which handed the draft head a green required context. So this
+# runs the gate's own script against the event/result matrix and asserts the
+# conclusions.
+MERGE_GATE_MATRIX = (
+    # (label, env, expected exit code)
+    (
+        "draft must fail closed",
+        {"DRAFT": "true", "PLAN": "success", "UBUNTU": "success",
+         "WINDOWS": "success", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "draft fails even when nothing else ran",
+        {"DRAFT": "true", "PLAN": "skipped", "UBUNTU": "skipped",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "skipped plan is not a passing plan",
+        {"DRAFT": "false", "PLAN": "skipped", "UBUNTU": "success",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "skipped Ubuntu is not a passing Ubuntu",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "skipped",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "cancelled Ubuntu is not a passing Ubuntu",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "cancelled",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "failed Ubuntu fails the gate",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "failure",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        1,
+    ),
+    (
+        "Windows may be absent when the plan does not require it",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        0,
+    ),
+    (
+        "a plan-required Windows must not be skipped",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
+         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "true"},
+        1,
+    ),
+    (
+        "a plan-required Windows must not have failed",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
+         "WINDOWS": "failure", "WINDOWS_REQUIRED": "true"},
+        1,
+    ),
+    (
+        "everything the plan required succeeded",
+        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
+         "WINDOWS": "success", "WINDOWS_REQUIRED": "true"},
+        0,
+    ),
+)
+
+
+def validate_merge_gate(path: Path, workflow: dict[str, Any]) -> list[str]:
+    """Prove the merge gate refuses, by running it rather than reading it."""
+
+    if path.name != "ci.yml":
+        return []
+    problems: list[str] = []
+    job = (workflow.get("jobs") or {}).get("merge-gate")
+    if not isinstance(job, dict):
+        return [f"{path}: ci.yml has no merge-gate job to enforce required checks"]
+
+    condition = str(job.get("if", ""))
+    if "always()" not in condition:
+        problems.append(
+            f"{path}: merge-gate must use always() or it skips exactly when it is needed"
+        )
+    required_needs = {"verification-plan", "compatibility", "windows-compatibility"}
+    declared = set(job.get("needs") or [])
+    missing = required_needs - declared
+    if missing:
+        problems.append(
+            f"{path}: merge-gate does not depend on {sorted(missing)}, so it can "
+            "conclude before those jobs decide"
+        )
+
+    scripts = [step.get("run") for step in job.get("steps") or [] if step.get("run")]
+    if len(scripts) != 1:
+        return problems + [
+            f"{path}: expected exactly one run step in merge-gate, found {len(scripts)}"
+        ]
+    script = scripts[0]
+
+    for label, environment, expected in MERGE_GATE_MATRIX:
+        full = {**os.environ, "ACTION": "synchronize", "HEAD_SHA": "0" * 40, **environment}
+        try:
+            finished = subprocess.run(
+                ["bash", "-c", script],
+                env=full,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            problems.append(f"{path}: merge-gate script could not be executed: {error}")
+            break
+        actual = 0 if finished.returncode == 0 else 1
+        if actual != expected:
+            problems.append(
+                f"{path}: merge-gate case '{label}' returned {finished.returncode}, "
+                f"expected {'success' if expected == 0 else 'failure'}. "
+                f"env={environment} output={finished.stdout.strip()[-160:]}"
+            )
+    return problems
+
+
 def main() -> None:
     paths = sorted(WORKFLOW_ROOT.glob("*.yml"))
     paths += sorted(WORKFLOW_ROOT.glob("*.yaml"))
@@ -252,6 +381,7 @@ def main() -> None:
         errors.extend(validate_checkout_credentials(path, workflow))
         errors.extend(validate_environment_contexts(path, workflow))
         errors.extend(validate_untrusted_triggers(path, content))
+        errors.extend(validate_merge_gate(path, workflow))
         workflow_actions.update(external_actions(content))
         print(path)
 
