@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -242,65 +243,148 @@ MERGE_GATE_MATRIX = (
     # (label, env, expected exit code)
     (
         "draft must fail closed",
-        {"DRAFT": "true", "PLAN": "success", "UBUNTU": "success",
-         "WINDOWS": "success", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "true",
+            "PLAN": "success",
+            "UBUNTU": "success",
+            "WINDOWS": "success",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "draft fails even when nothing else ran",
-        {"DRAFT": "true", "PLAN": "skipped", "UBUNTU": "skipped",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "true",
+            "PLAN": "skipped",
+            "UBUNTU": "skipped",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "skipped plan is not a passing plan",
-        {"DRAFT": "false", "PLAN": "skipped", "UBUNTU": "success",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "false",
+            "PLAN": "skipped",
+            "UBUNTU": "success",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "skipped Ubuntu is not a passing Ubuntu",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "skipped",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "skipped",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "cancelled Ubuntu is not a passing Ubuntu",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "cancelled",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "cancelled",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "failed Ubuntu fails the gate",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "failure",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "failure",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         1,
     ),
     (
         "Windows may be absent when the plan does not require it",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "false"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "success",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "false",
+        },
         0,
     ),
     (
         "a plan-required Windows must not be skipped",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
-         "WINDOWS": "skipped", "WINDOWS_REQUIRED": "true"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "success",
+            "WINDOWS": "skipped",
+            "WINDOWS_REQUIRED": "true",
+        },
         1,
     ),
     (
         "a plan-required Windows must not have failed",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
-         "WINDOWS": "failure", "WINDOWS_REQUIRED": "true"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "success",
+            "WINDOWS": "failure",
+            "WINDOWS_REQUIRED": "true",
+        },
         1,
     ),
     (
         "everything the plan required succeeded",
-        {"DRAFT": "false", "PLAN": "success", "UBUNTU": "success",
-         "WINDOWS": "success", "WINDOWS_REQUIRED": "true"},
+        {
+            "DRAFT": "false",
+            "PLAN": "success",
+            "UBUNTU": "success",
+            "WINDOWS": "success",
+            "WINDOWS_REQUIRED": "true",
+        },
         0,
     ),
 )
+
+
+def usable_bash() -> str | None:
+    """A bash that runs a script and reports its exit code faithfully.
+
+    On a Windows runner `bash` is WSL's, which is present on PATH and fails
+    everything when no distribution is installed. Git's bash sits beside git
+    itself. Neither can be trusted by name, so each candidate has to prove it
+    executes a script and returns its status.
+    """
+    candidates: list[str] = []
+    git = shutil.which("git")
+    if git:
+        # Git ships bash at <root>/bin/bash.exe, with git at <root>/cmd/git.exe.
+        candidates.append(str(Path(git).resolve().parents[1] / "bin" / "bash.exe"))
+    found = shutil.which("bash")
+    if found:
+        candidates.append(found)
+    for candidate in candidates:
+        if not Path(candidate).exists():
+            continue
+        try:
+            probe = subprocess.run(
+                [candidate, "-c", "exit 7"],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if probe.returncode == 7:
+            return candidate
+    return None
 
 
 def validate_merge_gate(path: Path, workflow: dict[str, Any]) -> list[str]:
@@ -334,11 +418,24 @@ def validate_merge_gate(path: Path, workflow: dict[str, Any]) -> list[str]:
         ]
     script = scripts[0]
 
+    shell = usable_bash()
+    if shell is None:
+        # Reported rather than passed over: the Ubuntu leg always has a real
+        # bash and enforces this, so a developer machine without one should say
+        # so out loud instead of appearing to have checked.
+        print(f"{path}: no usable bash; merge-gate behaviour NOT evaluated here")
+        return problems
+
     for label, environment, expected in MERGE_GATE_MATRIX:
-        full = {**os.environ, "ACTION": "synchronize", "HEAD_SHA": "0" * 40, **environment}
+        full = {
+            **os.environ,
+            "ACTION": "synchronize",
+            "HEAD_SHA": "0" * 40,
+            **environment,
+        }
         try:
             finished = subprocess.run(
-                ["bash", "-c", script],
+                [shell, "-c", script],
                 env=full,
                 capture_output=True,
                 text=True,
