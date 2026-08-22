@@ -49,6 +49,9 @@
         "required_status_checks": [
           {
             "context": "Ubuntu compatibility"
+          },
+          {
+            "context": "Merge gate"
           }
         ],
         "strict_required_status_checks_policy": true

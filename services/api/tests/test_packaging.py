@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import yaml
 
 from local_lm import __version__
 
@@ -970,6 +971,34 @@ def test_ci_workflow_retains_required_check_for_every_pr_scope() -> None:
     assert "name: Scheduled dependency audit" in workflow
     assert "npm audit --audit-level=high" in workflow
     assert ".venv/bin/python -m pip_audit" in workflow
+
+
+def test_merge_gate_refuses_every_unverified_pull_request_shape() -> None:
+    """Run the merge gate's own script, rather than reading the workflow text.
+
+    A ruleset counts a skipped required check as satisfied, so this job is the
+    only thing preventing a merge with no verification behind it. Asserting that
+    it *exists* would assert the wrong thing: the first version of it existed,
+    read correctly, and still exited zero on a draft, which handed the draft head
+    a green required context.
+
+    So the evaluator shared with `scripts/validate-workflows.py` executes the
+    real script across the event and result matrix and this pins the outcomes.
+    """
+    namespace = runpy.run_path(str(ROOT / "scripts/validate-workflows.py"))
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"))
+    problems = namespace["validate_merge_gate"](Path(".github/workflows/ci.yml"), workflow)
+    assert problems == [], "\n".join(problems)
+
+    matrix = namespace["MERGE_GATE_MATRIX"]
+    labels = {label for label, _environment, _expected in matrix}
+    # The two shapes that were wrong in the first attempt, named so that
+    # deleting either case fails here rather than silently narrowing coverage.
+    assert "draft must fail closed" in labels
+    assert "a plan-required Windows must not be skipped" in labels
+    assert any(expected == 0 for _l, _e, expected in matrix), (
+        "a matrix that only ever expects failure would pass against a gate that rejects everything"
+    )
 
 
 def test_public_repository_configuration_verifies_every_applied_control() -> None:
