@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from httpx2 import AsyncClient
+from sqlalchemy import event
 
+from local_lm import db
 from local_lm.db import SessionLocal
 from local_lm.models import (
     Chat,
@@ -17,6 +19,7 @@ from local_lm.models import (
     WorkflowDependencyBinding,
     WorkflowDependencySlot,
     WorkflowFamily,
+    WorkflowInstallOffer,
     WorkflowPreference,
     WorkflowRevision,
     WorkPlan,
@@ -96,6 +99,150 @@ def _family(
         resource_identity_sha256="e" * 64,
     )
     return family, definition, revision, preference, activation, slot, binding
+
+
+def _offer(
+    revision: WorkflowRevision,
+    *,
+    offer_id: str,
+    status: str = "ready",
+    artifact_sha256: str | None = None,
+    contract_sha256: str | None = None,
+) -> WorkflowInstallOffer:
+    return WorkflowInstallOffer(
+        id=offer_id,
+        workflow_revision_id=revision.id,
+        workflow_artifact_sha256=artifact_sha256 or revision.artifact_sha256 or "f" * 64,
+        dependency_contract_sha256=(
+            contract_sha256 or revision.dependency_contract_sha256 or "a" * 64
+        ),
+        binding_plan_sha256="b" * 64,
+        offer_sha256="c" * 64,
+        selections_json=[],
+        assets_json=[],
+        plan_count=1,
+        total_bytes=1,
+        status=status,
+    )
+
+
+async def test_setup_required_projects_one_exact_ready_offer_in_one_batched_query(
+    client: AsyncClient,
+) -> None:
+    cases: list[tuple[str, str]] = [
+        ("Exact offer", "exact"),
+        ("Artifact drift", "artifact"),
+        ("Contract drift", "contract"),
+        ("Completed offer", "completed"),
+        ("Ambiguous offers", "ambiguous"),
+        ("No offer", "none"),
+    ]
+    family_ids: dict[str, str] = {}
+    offer_ids: dict[str, str] = {}
+    with SessionLocal() as session:
+        for name, case in cases:
+            family, definition, revision, preference, *_ = _family(name=name)
+            revision.artifact_sha256 = "2" * 64
+            revision.dependency_contract_sha256 = "a" * 64
+            session.add_all([family, definition, revision, preference])
+            session.flush()
+            definition.current_revision_id = revision.id
+            family_ids[case] = family.id
+            if case == "none":
+                continue
+            first = _offer(
+                revision,
+                offer_id=f"wfoffer_{case}_1",
+                status="completed" if case == "completed" else "ready",
+                artifact_sha256="0" * 64 if case == "artifact" else None,
+                contract_sha256="1" * 64 if case == "contract" else None,
+            )
+            session.add(first)
+            offer_ids[case] = first.id
+            if case == "ambiguous":
+                session.add(_offer(revision, offer_id="wfoffer_ambiguous_2"))
+        session.commit()
+
+    statements: list[str] = []
+
+    def record_statement(
+        _connection: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        if statement.lstrip().upper().startswith("SELECT"):
+            statements.append(statement)
+
+    event.listen(db.engine, "before_cursor_execute", record_statement)
+    try:
+        response = await client.get("/api/workflow-families")
+    finally:
+        event.remove(db.engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 200, response.json()
+    by_id = {item["id"]: item["variants"][0] for item in response.json()}
+    exact = by_id[family_ids["exact"]]
+    assert exact["readiness"] == "setup_required"
+    assert exact["setup_resolution"] == "reviewed_download_available"
+    assert exact["install_offer_id"] == offer_ids["exact"]
+    for case in ("artifact", "contract", "completed", "ambiguous", "none"):
+        variant = by_id[family_ids[case]]
+        assert variant["readiness"] == "setup_required"
+        assert variant["setup_resolution"] == "attention_required"
+        assert variant["install_offer_id"] is None
+    offer_queries = [
+        statement for statement in statements if "workflow_install_offers" in statement
+    ]
+    assert len(offer_queries) == 1
+
+    filtered = await client.get(
+        "/api/workflow-families",
+        params={"selector_capability": "image"},
+    )
+    assert filtered.status_code == 200, filtered.json()
+    assert set(family_ids.values()) <= {item["id"] for item in filtered.json()}
+
+
+async def test_offer_projection_is_scoped_to_setup_required_and_family_detail(
+    client: AsyncClient,
+) -> None:
+    with SessionLocal() as session:
+        family, definition, revision, preference, *_ = _family(name="Setup family")
+        revision.artifact_sha256 = "d" * 64
+        revision.dependency_contract_sha256 = "e" * 64
+        session.add_all([family, definition, revision, preference])
+        session.flush()
+        definition.current_revision_id = revision.id
+        offer = _offer(revision, offer_id="wfoffer_detail")
+        session.add(offer)
+
+        ready_family, ready_definition, ready_revision, ready_preference, *_ = _family(
+            name="Ready family"
+        )
+        ready_revision.artifact_sha256 = "6" * 64
+        session.add_all([ready_family, ready_definition, ready_revision, ready_preference])
+        session.flush()
+        ready_definition.current_revision_id = ready_revision.id
+        session.add(_offer(ready_revision, offer_id="wfoffer_ready_ignored"))
+        session.commit()
+        family_id = family.id
+        ready_family_id = ready_family.id
+
+    detail = await client.get(f"/api/workflow-families/{family_id}")
+    assert detail.status_code == 200, detail.json()
+    variant = detail.json()["variants"][0]
+    assert variant["setup_resolution"] == "reviewed_download_available"
+    assert variant["install_offer_id"] == "wfoffer_detail"
+
+    ready_detail = await client.get(f"/api/workflow-families/{ready_family_id}")
+    assert ready_detail.status_code == 200, ready_detail.json()
+    ready_variant = ready_detail.json()["variants"][0]
+    assert ready_variant["readiness"] == "ready"
+    assert ready_variant["setup_resolution"] is None
+    assert ready_variant["install_offer_id"] is None
 
 
 async def test_family_metadata_defaults_and_archive_guards(client: AsyncClient) -> None:

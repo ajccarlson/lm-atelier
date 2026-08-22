@@ -572,7 +572,7 @@ def guard_artifact_reference_flush(
     if not referenced and not deleted:
         return
     begin_artifact_write_fence(session)
-    if deleted & referenced_artifact_ids(session):
+    if deleted & deletion_restricted_artifact_ids(session):
         raise ArtifactReferenceDataError(REFERENCE_CORRUPT)
     available = {
         value.id for value in session.new if isinstance(value, Artifact) and value.id not in deleted
@@ -663,3 +663,28 @@ def referenced_artifact_ids(session: Session) -> set[str]:
                     retain({linked_id})
                     pending.append(linked_id)
     return found
+
+
+def deletion_restricted_artifact_ids(session: Session) -> set[str]:
+    """Ids deletion must refuse.
+
+    SET NULL pointers are clearable only when no RESTRICT relationship also
+    names the same artifact. Cover/part pointers do not excuse deleting a
+    ReferenceAsset or library membership row.
+    """
+
+    blocked = referenced_artifact_ids(session)
+    clearable: set[str] = set()
+    for column in (
+        MessagePart.artifact_id,
+        ResponseRevisionPart.artifact_id,
+        ReferenceSubject.cover_artifact_id,
+    ):
+        clearable.update(value for value in session.scalars(select(column)) if value)
+    restricted: set[str] = set()
+    for column in (
+        ReferenceAsset.artifact_id,
+        ArtifactLibraryEntry.artifact_id,
+    ):
+        restricted.update(value for value in session.scalars(select(column)) if value)
+    return blocked - (clearable - restricted)

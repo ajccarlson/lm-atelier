@@ -888,6 +888,7 @@ export interface ApplicationInfo {
   version: string;
   data_directory: string;
   log_directory: string;
+  max_media_outputs_per_plan: number;
   // The installation-wide gate. False means no chat can open its own, and
   // the UI says so rather than offering a switch that does nothing.
   web_access_enabled: boolean;
@@ -1114,6 +1115,10 @@ export type WorkflowVariantReadiness =
   | "review_required"
   | "unavailable";
 
+export type WorkflowSetupResolution =
+  | "reviewed_download_available"
+  | "attention_required";
+
 export type WorkflowSelectionMode =
   | "default"
   | "inherit"
@@ -1134,6 +1139,10 @@ export interface WorkflowFamilyVariant {
   trusted: boolean;
   readiness: WorkflowVariantReadiness;
   readiness_reason: string | null;
+  // Optional for rolling compatibility with a backend that predates the
+  // additive setup-resolution projection.
+  setup_resolution?: WorkflowSetupResolution | null;
+  install_offer_id?: string | null;
 }
 
 export interface WorkflowFamilyPreference {
@@ -1311,6 +1320,21 @@ export interface ReferenceAsset {
   view_label: string | null;
   sort_order: number;
   validation_state: string;
+  validation_reasons_json: string[];
+  width: number | null;
+  height: number | null;
+  review_version: number;
+}
+
+export interface ReferenceAssetReviewed {
+  asset: ReferenceAsset;
+  review: {
+    id: string;
+    result_version: number;
+    decision: "usable" | "weak" | "rejected";
+    decision_sha256: string;
+  };
+  idempotent: boolean;
 }
 
 /** An image already held that closely resembles one just added. */

@@ -35,6 +35,14 @@
       ]
     },
     {
+      "id": "minimax-h3",
+      "roles": ["video"],
+      "architecture_markers": [
+        "minimaxh3",
+        "minimax_h3"
+      ]
+    },
+    {
       "id": "wan-video",
       "roles": ["video"],
       "architecture_markers": [

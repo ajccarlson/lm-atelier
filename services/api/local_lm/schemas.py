@@ -953,6 +953,10 @@ WorkflowVariantReadiness = Literal[
     "review_required",
     "unavailable",
 ]
+WorkflowSetupResolution = Literal[
+    "reviewed_download_available",
+    "attention_required",
+]
 WorkflowSelectionResponseMode = Literal[
     "default",
     "inherit",
@@ -975,6 +979,8 @@ class WorkflowFamilyVariantOut(ApiModel):
     trusted: bool
     readiness: WorkflowVariantReadiness
     readiness_reason: str | None = None
+    setup_resolution: WorkflowSetupResolution | None = None
+    install_offer_id: str | None = Field(default=None, max_length=40)
 
 
 class WorkflowFamilyPreferenceOut(ApiModel):
@@ -1888,6 +1894,46 @@ class ReferenceAssetOut(ApiModel):
     view_label: str | None
     sort_order: int
     validation_state: str
+    validation_reasons_json: list[str]
+    width: int | None
+    height: int | None
+    review_version: int
+
+
+ReferenceReviewReason = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
+
+
+class ReferenceAssetReviewRequest(ApiModel):
+    expected_state: Literal["unchecked"]
+    expected_version: int = Field(ge=1)
+    decision: Literal["usable", "weak", "rejected"]
+    reasons: list[ReferenceReviewReason] = Field(default_factory=list, max_length=16)
+
+
+class ReferenceAssetReviewEventOut(ApiModel):
+    id: str
+    reference_asset_id: str
+    artifact_id: str
+    artifact_sha256: str
+    reviewer_kind: Literal["local-human"]
+    expected_state: Literal["unchecked"]
+    expected_version: int
+    result_version: int
+    decision: Literal["usable", "weak", "rejected"]
+    reasons_json: list[str]
+    width: int
+    height: int
+    decision_sha256: str
+    reviewed_at: datetime
+
+
+class ReferenceAssetReviewed(ApiModel):
+    asset: ReferenceAssetOut
+    review: ReferenceAssetReviewEventOut
+    idempotent: bool
 
 
 class ReferenceSimilarAsset(ApiModel):
@@ -2049,6 +2095,7 @@ class ApplicationInfo(ApiModel):
     version: str
     data_directory: str
     log_directory: str
+    max_media_outputs_per_plan: int = Field(ge=1, le=16)
     # The installation-wide gate. When this is false no chat can open its
     # own, and the UI says so rather than offering a switch that does
     # nothing.

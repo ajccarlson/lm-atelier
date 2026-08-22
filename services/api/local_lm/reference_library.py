@@ -28,6 +28,7 @@ from .image_edit_difference import compare_images
 from .models import Artifact, ReferenceAsset, ReferenceSubject
 from .references import (
     MAX_NAME,
+    MAX_SLUG,
     ReferenceError,
     ReferenceKind,
     ReferencePurpose,
@@ -45,6 +46,16 @@ DEFAULT_PAGE = 50
 MAX_DESCRIPTION = 4000
 MAX_ALIASES = 32
 MAX_TAGS = 32
+MAX_SLUG_COLLISION_SUFFIX = 999
+
+_INVALID_MENTION = "a mention must use lowercase letters, digits and hyphens"
+_MENTION_TAKEN = "that mention is already in use"
+_MENTION_EXHAUSTED = "a unique mention could not be assigned"
+# Image comparison decodes every candidate. Skip a larger advisory scan rather
+# than turning one attachment into unbounded retained-byte reads and image
+# work. Attachment remains uncapped; an empty similarity result already means
+# that comparison could not run, not that every stored image was compared.
+MAX_SIMILARITY_CANDIDATES = 64
 
 
 @dataclass(frozen=True)
@@ -71,19 +82,24 @@ def _available_slug(session: Session, desired: str, *, exclude_id: str | None = 
     would push the user into inventing a worse name themselves.
     """
 
-    taken = select(ReferenceSubject.mention_slug).where(
-        ReferenceSubject.mention_slug.startswith(desired)
-    )
-    if exclude_id is not None:
-        taken = taken.where(ReferenceSubject.id != exclude_id)
-    existing = set(session.scalars(taken).all())
-    if desired not in existing:
+    if not valid_mention_slug(desired):
+        raise ReferenceError(_INVALID_MENTION)
+
+    def is_taken(candidate: str) -> bool:
+        query = select(ReferenceSubject.id).where(ReferenceSubject.mention_slug == candidate)
+        if exclude_id is not None:
+            query = query.where(ReferenceSubject.id != exclude_id)
+        return session.scalar(query) is not None
+
+    if not is_taken(desired):
         return desired
-    for suffix in range(2, 1000):
-        candidate = f"{desired}-{suffix}"
-        if candidate not in existing:
+    for suffix in range(2, MAX_SLUG_COLLISION_SUFFIX + 1):
+        ending = f"-{suffix}"
+        stem = desired[: MAX_SLUG - len(ending)].rstrip("-")
+        candidate = f"{stem}{ending}"
+        if not is_taken(candidate):
             return candidate
-    raise ReferenceError(f"too many subjects already answer to {desired!r}")
+    raise ReferenceError(_MENTION_EXHAUSTED)
 
 
 def create_subject(
@@ -109,13 +125,11 @@ def create_subject(
     else:
         slug = mention_slug.strip()
         if not valid_mention_slug(slug):
-            raise ReferenceError(
-                f"{slug!r} is not a usable mention; use letters, digits and hyphens"
-            )
+            raise ReferenceError(_INVALID_MENTION)
         if session.scalar(select(ReferenceSubject.id).where(ReferenceSubject.mention_slug == slug)):
             # An explicitly chosen mention is refused rather than silently
             # renumbered: the user asked for that exact one.
-            raise ReferenceError(f"another subject already answers to @{slug}")
+            raise ReferenceError(_MENTION_TAKEN)
 
     cleaned_description = (description or "").strip()
     if len(cleaned_description) > MAX_DESCRIPTION:
@@ -149,11 +163,11 @@ def rename_subject(
         raise ReferenceError("a subject needs a name")
     if len(cleaned) > MAX_NAME:
         raise ReferenceError(f"a name is at most {MAX_NAME} characters")
-    subject.name = cleaned
+    mention_slug = subject.mention_slug
     if follow_mention:
-        subject.mention_slug = _available_slug(
-            session, slugify_mention(cleaned), exclude_id=subject.id
-        )
+        mention_slug = _available_slug(session, slugify_mention(cleaned), exclude_id=subject.id)
+    subject.name = cleaned
+    subject.mention_slug = mention_slug
     session.flush()
     return subject
 
@@ -379,11 +393,13 @@ def attach_asset(
     if artifact is None:
         raise ReferenceError("that image is not in the artifact store")
 
-    existing = session.scalars(
-        select(ReferenceAsset).where(ReferenceAsset.reference_subject_id == subject.id)
-    ).all()
-
-    if any(row.artifact_id == artifact_id for row in existing):
+    exact = session.scalar(
+        select(ReferenceAsset.id).where(
+            ReferenceAsset.reference_subject_id == subject.id,
+            ReferenceAsset.artifact_id == artifact_id,
+        )
+    )
+    if exact is not None:
         raise ReferenceError(
             f"{subject.name} already holds that exact image; adding it twice would "
             "weight the set toward one picture"
@@ -391,15 +407,23 @@ def attach_asset(
 
     similar: list[SimilarAsset] = []
     if read_bytes is not None:
+        candidates = session.scalars(
+            select(ReferenceAsset)
+            .where(ReferenceAsset.reference_subject_id == subject.id)
+            .order_by(ReferenceAsset.sort_order, ReferenceAsset.id)
+            .limit(MAX_SIMILARITY_CANDIDATES + 1)
+        ).all()
+        if len(candidates) > MAX_SIMILARITY_CANDIDATES:
+            candidates = []
         try:
-            incoming = read_bytes(artifact_id)
-        except (OSError, KeyError):
+            incoming = read_bytes(artifact_id) if candidates else b""
+        except (OSError, KeyError, ValueError):
             incoming = b""
         if incoming:
-            for row in existing:
+            for row in candidates:
                 try:
                     other = read_bytes(row.artifact_id)
-                except (OSError, KeyError):
+                except (OSError, KeyError, ValueError):
                     continue
                 if not other:
                     continue
@@ -416,7 +440,12 @@ def attach_asset(
                         )
                     )
 
-    next_order = 1 + max((row.sort_order for row in existing), default=-1)
+    highest_order = session.scalar(
+        select(func.max(ReferenceAsset.sort_order)).where(
+            ReferenceAsset.reference_subject_id == subject.id
+        )
+    )
+    next_order = 0 if highest_order is None else highest_order + 1
     asset = ReferenceAsset(
         reference_subject_id=subject.id,
         artifact_id=artifact_id,

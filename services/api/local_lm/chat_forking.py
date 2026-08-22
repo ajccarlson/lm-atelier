@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from .message_references import carry_message_references_if_absent
 from .models import Chat, Message, MessagePart
 from .workflow_compatibility import copy_chat_workflow_selections
 
@@ -97,6 +98,14 @@ def fork_chat_from_message(session: Session, message_id: str) -> ChatFork:
                     metadata_json=dict(part.metadata_json or {}),
                 )
             )
+        # References are immutable history, just like the copied message. Use
+        # their sole writer so every identity/snapshot field travels verbatim
+        # and remains bound to the newly created message rather than the source.
+        carry_message_references_if_absent(
+            session,
+            source_message_id=message.id,
+            target_message_id=clone.id,
+        )
         parent_id = clone.id
         copied.append(clone.id)
 

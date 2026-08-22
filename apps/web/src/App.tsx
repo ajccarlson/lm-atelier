@@ -48,9 +48,7 @@ import { ActiveChatWorkflowSelector } from "./ActiveChatWorkflowSelector";
 import { CopyTextButton } from "./CopyTextButton";
 import { InstallConfirmDialog } from "./InstallConfirmDialog";
 import { api } from "./api";
-import {
-  formatBytes,
-} from "./format";
+import { formatBytes } from "./format";
 import {
 } from "./imageEditStrength";
 import { GlobalNotices } from "./GlobalNotices";
@@ -77,6 +75,8 @@ import { PendingResponseStatus } from "./PendingResponseStatus";
 import { MarkdownText } from "./MarkdownText";
 import { MentionText } from "./MentionText";
 import { MessageField } from "./MessageField";
+import { OutputCountControl } from "./OutputCountControl";
+import { mediaOutputCountForTurn, useMediaOutputCount } from "./mediaOutputCount";
 import type { TurnReference } from "./mentionDraft";
 import { useComposerMentions } from "./useComposerMentions";
 import { useConfirm } from "./useConfirm";
@@ -151,7 +151,7 @@ type SendTurnVariables = PendingTurn & {
   artifacts: string[];
   settings: Record<string, unknown>;
   /** Subject ids chosen from the mention picker, never parsed from the text. */
-  references: TurnReference[];
+  references: TurnReference[]; outputCount?: number;
   stopCurrent?: boolean;
 };
 
@@ -795,6 +795,7 @@ function Composer({
   onSend,
   onStop,
   onStopAndSend,
+  maxMediaOutputsPerPlan,
   workflows,
   project,
   visualTarget,
@@ -810,21 +811,22 @@ function Composer({
   presetId: string | null;
   onPreset: (presetId: string | null) => void;
   onMode: (mode: RoutingMode) => void;
-  onSend: (text: string, mode: RoutingMode, artifacts: string[], settings: Record<string, unknown>, references: TurnReference[]) => void;
+  onSend: (text: string, mode: RoutingMode, artifacts: string[], settings: Record<string, unknown>, references: TurnReference[], outputCount?: number) => void;
   onStop: () => void;
   onStopAndSend: (
     text: string,
     mode: RoutingMode,
     artifacts: string[],
     settings: Record<string, unknown>,
-    references: TurnReference[],
+    references: TurnReference[], outputCount?: number,
   ) => void;
-  workflows: Workflow[];
+  maxMediaOutputsPerPlan: number; workflows: Workflow[];
   project?: Project;
   visualTarget?: VisualTarget | null;
   quoteTarget?: { text: string; requestId: number } | null;
 }) {
   const [text, setText] = useState("");
+  const { outputCount, setOutputCount, resetOutputCount } = useMediaOutputCount();
   const mentions = useComposerMentions();
   const { mode, changeMode, currentMode } = useGenerationModeSelection(chat.routing_mode, onMode);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -930,6 +932,7 @@ function Composer({
       workflowSchema,
     );
     const dispatch = stopCurrent ? onStopAndSend : onSend;
+    const requestedOutputCount = mediaOutputCountForTurn(selectedMode, outputCount);
     dispatch(
       text.trim(),
       selectedMode,
@@ -941,11 +944,13 @@ function Composer({
             fields,
           ),
       mentions.forText(text),
+      requestedOutputCount,
     );
     setText("");
     mentions.clear();
     setAttachments([]);
     setTemplateSettings(null);
+    resetOutputCount();
   };
 
   return (
@@ -1070,6 +1075,7 @@ function Composer({
                 </select>
                 <ChevronDown size={13} />
               </label>
+              <OutputCountControl mode={mode} maximum={maxMediaOutputsPerPlan} value={outputCount} onChange={setOutputCount} />
               <div className="composer-workflow-selector">
                 <WorkflowIcon aria-hidden="true" size={15} />
                 <ActiveChatWorkflowSelector chatId={chat.id} routingMode={mode} />
@@ -1221,6 +1227,7 @@ function ChatView({
   onEdit,
   onStop,
   onStopAndSend,
+  maxMediaOutputsPerPlan,
   onCancelPlan,
   onCancelStep,
   onRetryStep,
@@ -1243,7 +1250,7 @@ function ChatView({
   onSettings: (settings: Record<string, unknown>) => void;
   onPreset: (presetId: string | null) => void;
   onMode: (mode: RoutingMode) => void;
-  onSend: (text: string, mode: RoutingMode, artifacts: string[], settings: Record<string, unknown>, references: TurnReference[]) => void;
+  onSend: (text: string, mode: RoutingMode, artifacts: string[], settings: Record<string, unknown>, references: TurnReference[], outputCount?: number) => void;
   onRegenerate: (messageId: string, settings: Record<string, unknown>) => void;
   onSelectRevision: (messageId: string, revisionId: string) => void;
   onEdit: (
@@ -1258,9 +1265,9 @@ function ChatView({
     mode: RoutingMode,
     artifacts: string[],
     settings: Record<string, unknown>,
-    references: TurnReference[],
+    references: TurnReference[], outputCount?: number,
   ) => void;
-  onCancelPlan: (planId: string) => void;
+  maxMediaOutputsPerPlan: number; onCancelPlan: (planId: string) => void;
   onCancelStep: (stepId: string) => void;
   onRetryStep: (stepId: string) => void;
   onDeleteExchange: (messageId: string) => void;
@@ -1453,7 +1460,7 @@ function ChatView({
         ))}
         <div ref={endRef} />
       </div>
-      <Composer chat={chat} engines={engines} profiles={profiles} stoppable={stoppable} settings={settings} onSettings={onSettings} presets={presets} presetId={presetId} onPreset={onPreset} onMode={onMode} onSend={onSend} onStop={onStop} onStopAndSend={onStopAndSend} workflows={workflows} project={project} visualTarget={visualTarget} quoteTarget={quoteTarget} />
+      <Composer chat={chat} engines={engines} profiles={profiles} stoppable={stoppable} settings={settings} onSettings={onSettings} presets={presets} presetId={presetId} onPreset={onPreset} onMode={onMode} onSend={onSend} onStop={onStop} onStopAndSend={onStopAndSend} maxMediaOutputsPerPlan={maxMediaOutputsPerPlan} workflows={workflows} project={project} visualTarget={visualTarget} quoteTarget={quoteTarget} />
     </div>
   );
 }
@@ -2149,6 +2156,7 @@ export default function App() {
   const profiles = useQuery({ queryKey: ["profiles"], queryFn: api.profiles });
   const presets = useQuery({ queryKey: ["presets"], queryFn: api.presets });
   const workflows = useQuery({ queryKey: ["workflows"], queryFn: api.workflows });
+  const applicationInfo = useQuery({ queryKey: ["about"], queryFn: api.about });
   const eventsConnected = useLiveEvents(client, setLiveText);
 
   const createChat = useMutation({
@@ -2183,10 +2191,12 @@ export default function App() {
     void client.invalidateQueries({ queryKey: ["work-plans", chatId] });
   };
   const send = useMutation({
-    mutationFn: ({ chatId, id, text, mode, artifacts, settings, references, stopCurrent }: SendTurnVariables) =>
-      stopCurrent
-        ? api.stopAndSendTurn(chatId, text, mode, artifacts, settings, id, references)
-        : api.sendTurn(chatId, text, mode, artifacts, settings, id, "turns", undefined, references),
+    mutationFn: ({ chatId, id, text, mode, artifacts, settings, references, outputCount, stopCurrent }: SendTurnVariables) => {
+      const optionalOutputCount: [] | [number] = outputCount === undefined ? [] : [outputCount];
+      return stopCurrent
+        ? api.stopAndSendTurn(chatId, text, mode, artifacts, settings, id, references, ...optionalOutputCount)
+        : api.sendTurn(chatId, text, mode, artifacts, settings, id, "turns", undefined, references, ...optionalOutputCount);
+    },
     onMutate: ({ chatId, id, text, mode }) => {
       setPendingTurns((current) => ({
         ...current,
@@ -2401,7 +2411,7 @@ export default function App() {
       ));
       updateChat.mutate({ id: displayedChat.id, values });
     };
-    return <ChatView key={displayedChat?.id ?? "empty-chat"} onOpenStudio={(artifactId) => { setStudioSource({ artifactId, chatId: displayedChat?.id ?? null }); setView("studio"); focusMainContent(); }} chat={displayedChat} engines={engines.data ?? []} profiles={profiles.data ?? []} presets={presets.data ?? []} workflows={workflows.data ?? []} project={allProjects.find((item) => item.id === displayedChat?.project_id)} liveText={liveText} pendingTurns={displayedChat ? pendingTurns[displayedChat.id] ?? [] : []} workPlans={workPlans.data ?? []} settings={scopedSettings} presetId={presetId} onSettings={(settings) => {
+    return <ChatView key={displayedChat?.id ?? "empty-chat"} onOpenStudio={(artifactId) => { setStudioSource({ artifactId, chatId: displayedChat?.id ?? null }); setView("studio"); focusMainContent(); }} chat={displayedChat} engines={engines.data ?? []} profiles={profiles.data ?? []} presets={presets.data ?? []} workflows={workflows.data ?? []} project={allProjects.find((item) => item.id === displayedChat?.project_id)} liveText={liveText} pendingTurns={displayedChat ? pendingTurns[displayedChat.id] ?? [] : []} workPlans={workPlans.data ?? []} settings={scopedSettings} presetId={presetId} maxMediaOutputsPerPlan={applicationInfo.data?.max_media_outputs_per_plan ?? 1} onSettings={(settings) => {
       if (!displayedChat) return;
       const role = roleForMode(displayedChat.routing_mode);
       persistActiveChat({
@@ -2439,9 +2449,9 @@ export default function App() {
       });
     }} onStop={() => {
       if (displayedChat) stop.mutate(displayedChat.id);
-    }} onStopAndSend={(text, mode, artifacts, settings, references) => {
+    }} onStopAndSend={(text, mode, artifacts, settings, references, outputCount) => {
       if (displayedChat) {
-        send.mutate({ chatId: displayedChat.id, id: crypto.randomUUID(), text, mode, artifacts, settings, references, stopCurrent: true });
+        send.mutate({ chatId: displayedChat.id, id: crypto.randomUUID(), text, mode, artifacts, settings, references, outputCount, stopCurrent: true });
       }
     }} onDeleteExchange={deleteExchange.mutate} onForkThread={forkThread.mutate} onCancelPlan={(planId) => {
       cancelWorkPlan.mutate(planId);
@@ -2449,12 +2459,12 @@ export default function App() {
       cancelWorkStep.mutate(stepId);
     }} onRetryStep={(stepId) => {
       retryWorkStep.mutate(stepId);
-    }} onSend={(text, mode, artifacts, settings, references) => {
+    }} onSend={(text, mode, artifacts, settings, references, outputCount) => {
       if (displayedChat) {
-        send.mutate({ chatId: displayedChat.id, id: crypto.randomUUID(), text, mode, artifacts, settings, references });
+        send.mutate({ chatId: displayedChat.id, id: crypto.randomUUID(), text, mode, artifacts, settings, references, outputCount });
       }
     }} />;
-  }, [studioSource, view, modelLibraryRole, engines.data, profiles.data, presets.data, workflows.data, allProjects, chat.data, chatDrafts, liveText, pendingTurns, workPlans.data, send, regenerate, selectResponseRevision, branch, stop, cancelWorkPlan, cancelWorkStep, retryWorkStep, updateChat, deleteExchange, forkThread, client, openLibraryImage]);
+  }, [studioSource, view, modelLibraryRole, engines.data, profiles.data, presets.data, workflows.data, applicationInfo.data, allProjects, chat.data, chatDrafts, liveText, pendingTurns, workPlans.data, send, regenerate, selectResponseRevision, branch, stop, cancelWorkPlan, cancelWorkStep, retryWorkStep, updateChat, deleteExchange, forkThread, client, openLibraryImage]);
 
   if (firstRunSetup && setupReadiness.data) {
     return <FirstRunSetup report={setupReadiness.data} onExit={exitFirstRunSetup} onOpenModels={(role) => { exitFirstRunSetup(); setModelLibraryRole(role); setView("models"); }} onOpenWorkflows={() => { exitFirstRunSetup(); setView("workflows"); }} />;

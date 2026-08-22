@@ -90,6 +90,54 @@ def test_static_inspector_resolves_unknown_repository_by_config_and_headers() ->
     assert inspection.components[0].target_folder == "checkpoints"
 
 
+def test_minimax_h3_family_is_video_only_and_does_not_grant_a_workflow() -> None:
+    files = {
+        "config.json": json.dumps({"_class_name": "MiniMaxH3"}).encode(),
+        "model.safetensors": _safetensors(["model.diffusion_model.block.weight"]),
+    }
+
+    inspection = inspect_repository_metadata(files, ["model.safetensors"], role="video")
+    wrong_role = inspect_repository_metadata(files, ["model.safetensors"], role="image")
+    unrelated = inspect_repository_metadata(
+        {"config.json": json.dumps({"_class_name": "MiniMaxTextModel"}).encode()},
+        ["model.safetensors"],
+        role="video",
+    )
+    plan = resolve_install_plan(
+        remote_id="synthetic/minimax-h3-metadata",
+        revision="3" * 40,
+        role="video",
+        engine="comfyui",
+        selected_files=[{"filename": "model.safetensors", "size": 4_096, "sha256": "4" * 64}],
+        inspection=inspection,
+    )
+
+    assert inspection.architecture == "MiniMaxH3"
+    assert inspection.family == "minimax-h3"
+    assert wrong_role.family is None
+    assert unrelated.family is None
+    assert plan.family == "minimax-h3"
+    assert plan.compatibility == "trusted_extension_required"
+    assert plan.failure_code == "workflow_contract_missing"
+    assert plan.activation_probe["required"] is False
+    assert replace(plan, family=None).plan_hash != plan.plan_hash
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    ["NotMiniMaxH3Custom", "MiniMaxH30", "prefix_minimax_h3_evil"],
+)
+def test_minimax_h3_family_refuses_substring_declarations(declaration: str) -> None:
+    inspection = inspect_repository_metadata(
+        {"config.json": json.dumps({"_class_name": declaration}).encode()},
+        ["model.safetensors"],
+        role="video",
+    )
+
+    assert inspection.architecture == declaration
+    assert inspection.family is None
+
+
 def test_static_inspector_distinguishes_lora_from_primary_checkpoint() -> None:
     inspection = inspect_repository_metadata(
         {

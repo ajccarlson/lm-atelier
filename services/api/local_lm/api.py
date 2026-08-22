@@ -116,6 +116,7 @@ from .gguf import (
 from .hardware import collect_system_info
 from .image_edit_strength import STRENGTH_MODE_PARAMETER
 from .model_manifests import (
+    COMFY_MODEL_FOLDERS,
     MAX_METADATA_BYTES,
     MAX_WEIGHT_HEADER_BYTES,
     ModelManifestError,
@@ -209,6 +210,12 @@ from .reference_library import (
     set_details,
     set_favorite,
 )
+from .reference_review import (
+    ReferenceReviewConflict,
+    ReferenceReviewInvalid,
+    ReferenceReviewNotFound,
+    review_reference_asset,
+)
 from .references import ReferenceError, ReferenceNotFoundError
 from .routing import RouteConfirmationRequired
 from .runtime_config import persist_runtime_values
@@ -286,6 +293,9 @@ from .schemas import (
     ReferenceAssetAttach,
     ReferenceAssetAttached,
     ReferenceAssetOut,
+    ReferenceAssetReviewed,
+    ReferenceAssetReviewEventOut,
+    ReferenceAssetReviewRequest,
     ReferenceCoverIn,
     ReferenceDeletionImpact,
     ReferenceRecipe,
@@ -633,6 +643,7 @@ async def application_info(request: Request) -> ApplicationInfo:
         version=__version__,
         data_directory=str(settings.data_dir.resolve()),
         log_directory=str(settings.log_dir.resolve()),
+        max_media_outputs_per_plan=settings.max_media_outputs_per_plan,
         web_access_enabled=settings.web_access_enabled,
     )
 
@@ -4629,7 +4640,10 @@ async def attach_reference_asset(
         artifact = session.get(Artifact, artifact_id)
         if artifact is None:
             raise KeyError(artifact_id)
-        return services.artifacts.verified_path(artifact).read_bytes()
+        return services.artifacts.read_verified_bytes(
+            artifact,
+            maximum_bytes=services.settings.max_upload_bytes,
+        )
 
     try:
         attached = attach_asset(
@@ -4662,6 +4676,53 @@ async def attach_reference_asset(
 async def list_reference_assets(subject_id: str, session: SessionDep) -> list[ReferenceAsset]:
     subject = _subject_or_404(session, subject_id)
     return list(subject.assets)
+
+
+@router.post(
+    "/references/{subject_id}/assets/{asset_id}/review",
+    response_model=ReferenceAssetReviewed,
+)
+async def review_reference_image(
+    subject_id: str,
+    asset_id: str,
+    payload: ReferenceAssetReviewRequest,
+    request: Request,
+    session: SessionDep,
+) -> ReferenceAssetReviewed:
+    """Settle one exact unchecked image review, with exact retries idempotent."""
+
+    services = _services(request)
+    try:
+        result = review_reference_asset(
+            session,
+            services.artifacts,
+            subject_id=subject_id,
+            asset_id=asset_id,
+            expected_state=payload.expected_state,
+            expected_version=payload.expected_version,
+            decision=payload.decision,
+            reasons=list(payload.reasons),
+            maximum_bytes=services.settings.max_upload_bytes,
+            maximum_pixels=services.settings.vision_max_pixels,
+        )
+    except ReferenceReviewNotFound as exc:
+        raise api_error(404, "reference-asset-not-attached", str(exc)) from exc
+    except ReferenceReviewConflict as exc:
+        raise api_error(
+            409,
+            "reference-asset-review-conflict",
+            str(exc),
+            current_state=exc.state,
+            current_version=exc.version,
+        ) from exc
+    except ReferenceReviewInvalid as exc:
+        raise api_error(422, "reference-asset-review-invalid", str(exc)) from exc
+    session.commit()
+    return ReferenceAssetReviewed(
+        asset=ReferenceAssetOut.model_validate(result.asset, from_attributes=True),
+        review=ReferenceAssetReviewEventOut.model_validate(result.review, from_attributes=True),
+        idempotent=result.idempotent,
+    )
 
 
 @router.delete("/references/{subject_id}/assets/{asset_id}", status_code=204)
@@ -5113,6 +5174,7 @@ async def check_model_updates(request: Request, session: SessionDep) -> list[Mod
 @router.post("/models/import", response_model=ModelInstallOut, status_code=201)
 async def import_model(payload: ModelImport, session: SessionDep) -> ModelInstall:
     path = Path(payload.local_path).expanduser().resolve(strict=True)
+    comfy_paths = _comfy_import_paths(path) if payload.engine == "comfyui" else {}
     blocked = {".bin", ".pt", ".pth", ".ckpt", ".pkl", ".pickle"}
     files = [child for child in path.rglob("*") if child.is_file()] if path.is_dir() else [path]
     unsafe = [child for child in files if child.suffix.lower() in blocked]
@@ -5134,6 +5196,7 @@ async def import_model(payload: ModelImport, session: SessionDep) -> ModelInstal
             "path_type": "directory" if path.is_dir() else "file",
             "file_count": len(files),
             "pickle_compatible_weights": False,
+            **({"comfy_paths": comfy_paths} if comfy_paths else {}),
         },
     )
     session.add(install)
@@ -5142,6 +5205,26 @@ async def import_model(payload: ModelImport, session: SessionDep) -> ModelInstal
     session.commit()
     session.refresh(install)
     return install
+
+
+def _comfy_import_paths(path: Path) -> dict[str, str]:
+    """Expose exact, ordinary ComfyUI model folders under an imported root."""
+
+    if not path.is_dir():
+        return {}
+    result: dict[str, str] = {}
+    for child in sorted(path.iterdir(), key=lambda item: item.name):
+        if child.name not in COMFY_MODEL_FOLDERS:
+            continue
+        if is_link_or_reparse(child, missing="assume_link", unreadable="assume_link"):
+            raise api_error(
+                422,
+                "model-path-unsafe",
+                "ComfyUI model folders cannot use filesystem links",
+            )
+        if child.is_dir():
+            result[child.name] = child.name
+    return result
 
 
 @router.post("/models/{model_id}/activate", response_model=JobOut, status_code=202)
@@ -6488,6 +6571,7 @@ def _workflow_family_variant_out(
     family: WorkflowFamily,
     definition: WorkflowDefinition,
     compatibility: WorkflowProfileCompatibility | None,
+    ready_offers: Mapping[str, tuple[WorkflowInstallOffer, ...]],
 ) -> WorkflowFamilyVariantOut:
     readiness: WorkflowVariantReadiness
     reason: str | None
@@ -6549,6 +6633,20 @@ def _workflow_family_variant_out(
         readiness, reason = "unavailable", "family_archived"
     elif not family.enabled:
         readiness, reason = "unavailable", "family_disabled"
+    setup_resolution: Literal["reviewed_download_available", "attention_required"] | None = None
+    install_offer_id: str | None = None
+    if readiness == "setup_required":
+        setup_resolution = "attention_required"
+        if revision is not None:
+            matching_offers = [
+                offer
+                for offer in ready_offers.get(revision.id, ())
+                if offer.workflow_artifact_sha256 == revision.artifact_sha256
+                and offer.dependency_contract_sha256 == revision.dependency_contract_sha256
+            ]
+            if len(matching_offers) == 1:
+                setup_resolution = "reviewed_download_available"
+                install_offer_id = matching_offers[0].id
     return WorkflowFamilyVariantOut(
         id=definition.id,
         variant_key=definition.variant_key or "",
@@ -6561,13 +6659,59 @@ def _workflow_family_variant_out(
         trusted=revision.trusted if revision else compatibility is not None,
         readiness=readiness,
         readiness_reason=reason,
+        setup_resolution=setup_resolution,
+        install_offer_id=install_offer_id,
     )
+
+
+def _ready_workflow_install_offers(
+    session: Session,
+    *,
+    family_id: str | None = None,
+    selector_capability: WorkflowSelectorCapability | None = None,
+    include_archived: bool = True,
+) -> dict[str, tuple[WorkflowInstallOffer, ...]]:
+    query = (
+        select(WorkflowInstallOffer)
+        .join(
+            WorkflowRevision,
+            WorkflowRevision.id == WorkflowInstallOffer.workflow_revision_id,
+        )
+        .join(
+            WorkflowDefinition,
+            and_(
+                WorkflowDefinition.id == WorkflowRevision.workflow_id,
+                WorkflowDefinition.current_revision_id == WorkflowRevision.id,
+            ),
+        )
+        .join(WorkflowFamily, WorkflowFamily.id == WorkflowDefinition.family_id)
+        .where(
+            WorkflowInstallOffer.status == "ready",
+            WorkflowInstallOffer.invalidated_at.is_(None),
+        )
+    )
+    if family_id is not None:
+        query = query.where(WorkflowFamily.id == family_id)
+    else:
+        if not include_archived:
+            query = query.where(WorkflowFamily.archived.is_(False))
+        if selector_capability is not None:
+            query = query.join(WorkflowPreference).where(
+                WorkflowPreference.selector_capability == selector_capability
+            )
+    grouped: dict[str, list[WorkflowInstallOffer]] = {}
+    for offer in session.scalars(
+        query.order_by(WorkflowInstallOffer.workflow_revision_id, WorkflowInstallOffer.id)
+    ).unique():
+        grouped.setdefault(offer.workflow_revision_id, []).append(offer)
+    return {revision_id: tuple(offers) for revision_id, offers in grouped.items()}
 
 
 def _workflow_family_out(
     session: Session,
     services: Services,
     family: WorkflowFamily,
+    ready_offers: Mapping[str, tuple[WorkflowInstallOffer, ...]],
 ) -> WorkflowFamilyOut:
     compatibility = session.scalar(
         select(WorkflowProfileCompatibility).where(
@@ -6590,6 +6734,7 @@ def _workflow_family_out(
                 family,
                 definition,
                 compatibility,
+                ready_offers,
             )
             for definition in sorted(
                 family.definitions,
@@ -6693,7 +6838,12 @@ async def list_workflow_families(
         session.scalars(query.order_by(WorkflowFamily.name, WorkflowFamily.id)).unique()
     )
     services = _services(request)
-    return [_workflow_family_out(session, services, family) for family in families]
+    ready_offers = _ready_workflow_install_offers(
+        session,
+        selector_capability=selector_capability,
+        include_archived=include_archived,
+    )
+    return [_workflow_family_out(session, services, family, ready_offers) for family in families]
 
 
 @router.get("/workflow-families/{family_id}", response_model=WorkflowFamilyOut)
@@ -6703,7 +6853,8 @@ async def get_workflow_family(
     session: SessionDep,
 ) -> WorkflowFamilyOut:
     family = _workflow_family_row(session, family_id)
-    return _workflow_family_out(session, _services(request), family)
+    ready_offers = _ready_workflow_install_offers(session, family_id=family_id)
+    return _workflow_family_out(session, _services(request), family, ready_offers)
 
 
 @router.patch("/workflow-families/{family_id}", response_model=WorkflowFamilyOut)
@@ -6766,7 +6917,8 @@ async def update_workflow_family(
         ensure_legacy_profile_workflow(session, compatibility_profile)
     session.commit()
     family = _workflow_family_row(session, family.id)
-    return _workflow_family_out(session, _services(request), family)
+    ready_offers = _ready_workflow_install_offers(session, family_id=family.id)
+    return _workflow_family_out(session, _services(request), family, ready_offers)
 
 
 def _normalized_workflow_family_tags(tags: list[str]) -> list[str]:

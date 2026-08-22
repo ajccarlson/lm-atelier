@@ -426,6 +426,8 @@ async def test_workflow_family_catalog_reports_variants_preferences_and_readines
         "trusted": True,
         "readiness": "ready",
         "readiness_reason": None,
+        "setup_resolution": None,
+        "install_offer_id": None,
     }
 
 

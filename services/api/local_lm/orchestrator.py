@@ -89,6 +89,7 @@ from .image_edit_verification import (
 from .media_references import exceeds_capacity
 from .message_references import (
     carry_message_references_if_absent,
+    message_references,
     record_message_references,
     resolve_reference_requests,
 )
@@ -127,6 +128,7 @@ from .processes import ProcessSupervisor
 from .profile_service import AUTO_PROFILE_ID
 from .progress import completed_progress, update_job_progress
 from .prompt_helpers import PROMPT_HELPER_SCOPE, prompt_helper_system_message
+from .reference_conditioning_runtime import bind_selected_reference_images
 from .references import parse_reference_requests
 from .routing import ModalityRouter, RouteConfirmationRequired
 from .scheduler import ResourceScheduler
@@ -866,8 +868,24 @@ class ConversationOrchestrator:
                 parent_message_id,
             )
         )
+        requested_references = parse_reference_requests(
+            [reference.model_dump(mode="json") for reference in request.references]
+        )
+        resolved_references = (
+            message_references(session, reference_source_message_id)
+            if reference_source_message_id is not None
+            else resolve_reference_requests(session, requested_references)
+        )
+        bound_reference_images = bind_selected_reference_images(
+            session,
+            self.artifacts,
+            resolved_references,
+            maximum_bytes=self.engines.settings.max_upload_bytes,
+        )
+        reference_artifact_ids = [item.artifact_id for item in bound_reference_images]
+        reference_artifact_id_set = set(reference_artifact_ids)
         explicit_artifacts: dict[str, Artifact] = {}
-        for artifact_id in request.input_artifact_ids:
+        for artifact_id in [*request.input_artifact_ids, *reference_artifact_ids]:
             artifact = session.get(Artifact, artifact_id)
             if not artifact:
                 raise LookupError(f"input artifact not found: {artifact_id}")
@@ -956,7 +974,7 @@ class ConversationOrchestrator:
                     adapter=self.engines.chat,
                     text=request.text,
                     mode=mode,
-                    input_artifact_ids=request.input_artifact_ids,
+                    input_artifact_ids=list(explicit_artifacts),
                     has_prior_image=has_prior_image,
                     conversation=routing_context,
                 )
@@ -964,7 +982,7 @@ class ConversationOrchestrator:
                 plan = self.router.plan(
                     text=request.text,
                     mode=mode,
-                    input_artifact_ids=request.input_artifact_ids,
+                    input_artifact_ids=list(explicit_artifacts),
                     has_prior_image=has_prior_image,
                     conversation=routing_context,
                 )
@@ -976,7 +994,9 @@ class ConversationOrchestrator:
             and not request.confirm_media
         ):
             raise RouteConfirmationRequired(plan)
-        resolved_input_ids = list(dict.fromkeys(request.input_artifact_ids))
+        resolved_input_ids = list(
+            dict.fromkeys([*request.input_artifact_ids, *reference_artifact_ids])
+        )
         prior_prompt: str | None = None
         if plan.operation in {Operation.IMAGE_TO_IMAGE, Operation.IMAGE_TO_VIDEO}:
             if not resolved_input_ids and prior_image:
@@ -1013,7 +1033,12 @@ class ConversationOrchestrator:
                 Operation.IMAGE_TO_IMAGE: Operation.TEXT_TO_IMAGE,
                 Operation.IMAGE_TO_VIDEO: Operation.TEXT_TO_VIDEO,
             }.get(plan.operation)
-            if semantic_fallback and not request.input_artifact_ids and prior_prompt:
+            if (
+                semantic_fallback
+                and not request.input_artifact_ids
+                and not reference_artifact_ids
+                and prior_prompt
+            ):
                 plan.operation = semantic_fallback
                 plan.input_artifact_ids = []
                 resolved_input_ids = []
@@ -1294,7 +1319,7 @@ class ConversationOrchestrator:
         input_parts: list[MessagePart] = [
             MessagePart(position=0, type=PartType.TEXT.value, text=request.text)
         ]
-        explicit_ids = set(explicit_artifacts)
+        explicit_ids = set(request.input_artifact_ids)
         for artifact_id in resolved_input_ids:
             artifact = explicit_artifacts.get(artifact_id) or session.get(Artifact, artifact_id)
             if not artifact:
@@ -1309,7 +1334,11 @@ class ConversationOrchestrator:
                     metadata_json={
                         "input_reference": True,
                         "input_reference_source": (
-                            "explicit" if artifact.id in explicit_ids else "ancestor"
+                            "explicit"
+                            if artifact.id in explicit_ids
+                            else "reference"
+                            if artifact.id in reference_artifact_id_set
+                            else "ancestor"
                         ),
                     },
                 )
@@ -1421,9 +1450,13 @@ class ConversationOrchestrator:
         )
         input_bindings: list[dict[str, Any]] = [
             {
-                "type": "explicit_artifact"
-                if artifact_id in explicit_ids
-                else "response_revision.artifact",
+                "type": (
+                    "explicit_artifact"
+                    if artifact_id in explicit_ids
+                    else "reference_asset"
+                    if artifact_id in reference_artifact_id_set
+                    else "response_revision.artifact"
+                ),
                 "artifact_id": artifact_id,
             }
             for artifact_id in resolved_input_ids
@@ -1499,6 +1532,7 @@ class ConversationOrchestrator:
                 **({"visual_prompt": visual_prompt} if visual_prompt else {}),
                 "model_selection": model_selection,
                 "input_artifact_ids": resolved_input_ids,
+                "reference_conditioning": [item.provenance() for item in bound_reference_images],
                 "model": model_provenance,
                 "preset": (
                     {

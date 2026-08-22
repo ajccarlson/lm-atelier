@@ -9,6 +9,7 @@ vi.mock("./api", () => ({
   api: {
     referenceAssets: vi.fn(),
     attachReferenceAsset: vi.fn(),
+    reviewReferenceAsset: vi.fn(),
     detachReferenceAsset: vi.fn(),
     artifacts: vi.fn(),
     setReferenceCover: vi.fn(),
@@ -42,6 +43,10 @@ function asset(overrides: Partial<ReferenceAsset> = {}): ReferenceAsset {
     view_label: null,
     sort_order: 0,
     validation_state: "unchecked",
+    validation_reasons_json: [],
+    width: null,
+    height: null,
+    review_version: 1,
     ...overrides,
   };
 }

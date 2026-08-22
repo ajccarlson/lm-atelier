@@ -33,14 +33,18 @@ function subject(overrides: Partial<ReferenceSubject> = {}): ReferenceSubject {
   };
 }
 
-function show(items: ReferenceSubject[] = [subject()]) {
-  mocked.references.mockResolvedValue({ items, total: items.length, limit: 50, offset: 0 });
+function renderLibrary() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
       <ReferencesLibrary />
     </QueryClientProvider>,
   );
+}
+
+function show(items: ReferenceSubject[] = [subject()]) {
+  mocked.references.mockResolvedValue({ items, total: items.length, limit: 50, offset: 0 });
+  return renderLibrary();
 }
 
 afterEach(() => {
@@ -147,5 +151,116 @@ describe("references library", () => {
 
     await screen.findByText("Ada Lovelace");
     expect(container.querySelector("img.reference-cover")).toBeNull();
+  });
+
+  it("pages through every reference instead of stopping at the first fifty", async () => {
+    mocked.references.mockImplementation(async (_search, _archived, limit, offset) => {
+      const pageLimit = limit ?? 50;
+      const pageOffset = offset ?? 0;
+      expect(pageLimit).toBe(50);
+      return pageOffset === 0
+        ? {
+            items: Array.from({ length: 50 }, (_, index) =>
+              subject({ id: `ref-${index + 1}`, name: `Reference ${index + 1}` }),
+            ),
+            total: 51,
+            limit: pageLimit,
+            offset: pageOffset,
+          }
+        : {
+            items: [subject({ id: "ref-51", name: "Last reference" })],
+            total: 51,
+            limit: pageLimit,
+            offset: pageOffset,
+          };
+    });
+    renderLibrary();
+
+    expect(await screen.findByText("Showing 1-50 of 51")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(await screen.findByText("Last reference")).toBeTruthy();
+    expect(screen.getByText("Showing 51-51 of 51")).toBeTruthy();
+    expect(mocked.references).toHaveBeenLastCalledWith("", false, 50, 50);
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    await waitFor(() => expect(mocked.references).toHaveBeenLastCalledWith("", false, 50, 0));
+  });
+
+  it("returns to the first page when a filter changes", async () => {
+    mocked.references.mockImplementation(async (_search, _archived, limit, offset) => ({
+      items: [subject({ name: (offset ?? 0) === 0 ? "First page" : "Second page" })],
+      total: 51,
+      limit: limit ?? 50,
+      offset: offset ?? 0,
+    }));
+    renderLibrary();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+    expect(await screen.findByText("Second page")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Search references"), {
+      target: { value: "Ada" },
+    });
+    await waitFor(() => expect(mocked.references).toHaveBeenLastCalledWith("Ada", false, 50, 0));
+
+    fireEvent.click(screen.getByLabelText("Show archived"));
+    await waitFor(() => expect(mocked.references).toHaveBeenLastCalledWith("Ada", true, 50, 0));
+  });
+
+  it("returns to the previous page after deleting its only item", async () => {
+    let deleted = false;
+    mocked.references.mockImplementation(async (_search, _archived, limit, offset) => ({
+      items:
+        deleted && (offset ?? 0) > 0
+          ? []
+          : [subject({ id: (offset ?? 0) === 0 ? "ref-1" : "ref-51" })],
+      total: deleted ? 50 : 51,
+      limit: limit ?? 50,
+      offset: offset ?? 0,
+    }));
+    mocked.referenceDeletionImpact.mockResolvedValue({
+      reference_subject_id: "ref-51",
+      name: "Ada Lovelace",
+      asset_count: 0,
+      exclusive_artifact_ids: [],
+    });
+    mocked.deleteReference.mockImplementation(async () => {
+      deleted = true;
+    });
+    renderLibrary();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("Showing 51-51 of 51");
+    expect(mocked.references).toHaveBeenLastCalledWith("", false, 50, 50);
+    fireEvent.click(screen.getByLabelText("Delete permanently"));
+    fireEvent.click(await screen.findByText("Delete permanently", { selector: "button.danger" }));
+
+    await waitFor(() => expect(mocked.references).toHaveBeenLastCalledWith("", false, 50, 0));
+  });
+
+  it("returns to the previous page when archiving removes its only visible item", async () => {
+    let archived = false;
+    mocked.references.mockImplementation(async (_search, includeArchived, limit, offset) => ({
+      items:
+        archived && !includeArchived && (offset ?? 0) > 0
+          ? []
+          : [subject({ id: (offset ?? 0) === 0 ? "ref-1" : "ref-51" })],
+      total: archived && !includeArchived ? 50 : 51,
+      limit: limit ?? 50,
+      offset: offset ?? 0,
+    }));
+    mocked.updateReference.mockImplementation(async () => {
+      archived = true;
+      return subject({ id: "ref-51", archived: true });
+    });
+    renderLibrary();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("Showing 51-51 of 51");
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+
+    await waitFor(() => expect(mocked.references).toHaveBeenLastCalledWith("", false, 50, 0));
+    expect(screen.queryByText("Showing 50-50 of 50")).toBeNull();
   });
 });

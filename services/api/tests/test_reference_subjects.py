@@ -129,6 +129,22 @@ def test_an_image_in_use_cannot_be_deleted_out_from_under_a_subject(session: Ses
     session.rollback()
 
 
+def test_restrict_membership_wins_when_the_same_id_is_also_a_cover(
+    session: Session,
+) -> None:
+    """A SET NULL cover pointer does not excuse deleting a RESTRICT asset."""
+
+    artifact = _artifact(session)
+    subject = _subject(session, cover_artifact_id=artifact.id)
+    session.add(ReferenceAsset(reference_subject_id=subject.id, artifact_id=artifact.id))
+    session.commit()
+
+    session.delete(artifact)
+    with pytest.raises(ArtifactReferenceDataError):
+        session.commit()
+    session.rollback()
+
+
 def test_losing_a_cover_image_does_not_lose_the_subject(session: Session) -> None:
     """Images are replaceable; the identity is not."""
 

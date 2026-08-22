@@ -13,11 +13,13 @@ import httpx
 import pytest
 
 import local_lm.runtime_provisioning as runtime_provisioning
+from local_lm.config import Settings
 from local_lm.runtime_config import runtime_config_path
 from local_lm.runtime_provisioning import (
     RuntimeProvisioner,
     RuntimeProvisioningError,
     RuntimeVerificationCancelled,
+    default_engine_manifest_path,
 )
 
 
@@ -507,10 +509,13 @@ async def test_comfy_upgrade_carries_only_managed_registry_nodes(
         assert settings.comfy_directory is not None
         old_directory = settings.comfy_directory
         managed = old_directory / "custom_nodes" / "lm-atelier-registry_example"
+        managed_manual = old_directory / "custom_nodes" / "lm-atelier-node_example"
         unmanaged = old_directory / "custom_nodes" / "manually-installed-node"
         managed.mkdir(parents=True)
+        managed_manual.mkdir()
         unmanaged.mkdir()
         (managed / "node.py").write_bytes(b"managed node")
+        (managed_manual / "node.py").write_bytes(b"managed manual node")
         (unmanaged / "node.py").write_bytes(b"manual node")
         unrelated_release = settings.data_dir / "runtimes" / "comfyui" / "v-unrelated"
         unrelated = unrelated_release / "ComfyUI" / "custom_nodes" / "lm-atelier-registry_unrelated"
@@ -550,9 +555,167 @@ async def test_comfy_upgrade_carries_only_managed_registry_nodes(
     assert settings.comfy_directory != old_directory
     restored = settings.comfy_directory / "custom_nodes" / managed.name
     assert (restored / "node.py").read_bytes() == b"managed node"
+    restored_manual = settings.comfy_directory / "custom_nodes" / managed_manual.name
+    assert (restored_manual / "node.py").read_bytes() == b"managed manual node"
     assert not (settings.comfy_directory / "custom_nodes" / unmanaged.name).exists()
     assert not (settings.comfy_directory / "custom_nodes" / unrelated.name).exists()
     assert (managed / "node.py").read_bytes() == b"managed node"
+
+
+async def test_startup_restore_carries_registry_nodes_into_a_preinstalled_release(
+    settings,
+    tmp_path: Path,
+    monkeypatch,
+) -> None:  # type: ignore[no-untyped-def]
+    llama_content = _zip_bytes({"llama-server.exe": b"llama"})
+    comfy_content = _zip_bytes(
+        {
+            "python/python.exe": b"python",
+            "python/Lib/site-packages/example-1.0.dist-info/METADATA": (
+                b"Name: example\nVersion: 1.0\n"
+            ),
+            "ComfyUI/main.py": b"print('comfy')",
+        }
+    )
+    manifest = tmp_path / "engines.json"
+    settings.prepare()
+    probe = {"python": "3.13.14", "comfyui": "0.28.0", "packages": {"example": "1.0"}}
+    monkeypatch.setattr(
+        runtime_provisioning.subprocess,
+        "run",
+        lambda *args, **kwargs: runtime_provisioning.subprocess.CompletedProcess(  # noqa: ARG005
+            args[0],
+            0,
+            stdout=f"{runtime_provisioning._RUNTIME_PROBE_SENTINEL}{json.dumps(probe)}\n",
+            stderr="",
+        ),
+    )
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, content=comfy_content))
+    ) as client:
+        _write_manifest(
+            manifest,
+            llama_content=llama_content,
+            comfy_content=comfy_content,
+            comfy_release="v-old",
+            comfy_version="0.28.0",
+        )
+        old = RuntimeProvisioner(
+            settings,
+            manifest_path=manifest,
+            client=client,
+            environment={},
+            platform_key="test-platform",
+            allowed_download_hosts={"runtime.test"},
+        )
+        assert (await old.ensure("comfyui")).state == "ready"
+        await old.close()
+        assert settings.comfy_directory is not None
+        assert settings.comfy_executable is not None
+        old_directory = settings.comfy_directory
+        old_executable = settings.comfy_executable
+
+        _write_manifest(
+            manifest,
+            llama_content=llama_content,
+            comfy_content=comfy_content,
+            comfy_release="v-new",
+            comfy_version="0.30.0",
+        )
+        probe["comfyui"] = "0.30.0"
+        preinstall = RuntimeProvisioner(
+            settings,
+            manifest_path=manifest,
+            client=client,
+            environment={},
+            platform_key="test-platform",
+            allowed_download_hosts={"runtime.test"},
+        )
+        assert (await preinstall.ensure("comfyui")).state == "ready"
+        await preinstall.close()
+        assert settings.comfy_directory is not None
+        new_directory = settings.comfy_directory
+
+        managed = old_directory / "custom_nodes" / "lm-atelier-registry_late-renewal"
+        managed_manual = old_directory / "custom_nodes" / "lm-atelier-node_late-review"
+        unmanaged = old_directory / "custom_nodes" / "manual-node"
+        managed.mkdir(parents=True)
+        managed_manual.mkdir()
+        unmanaged.mkdir()
+        (managed / "node.py").write_bytes(b"renewed after preinstall")
+        (managed_manual / "node.py").write_bytes(b"reviewed after preinstall")
+        (unmanaged / "node.py").write_bytes(b"unmanaged")
+        assert not (new_directory / "custom_nodes" / managed.name).exists()
+
+        # Recreate the real restart boundary: startup constructs the
+        # provisioner while the worker still uses the old release, then another
+        # startup path advances the mutable settings object before background
+        # verification reaches ComfyUI.
+        settings.comfy_directory = old_directory
+        settings.comfy_executable = old_executable
+        environment: dict[str, str] = {}
+        restored = RuntimeProvisioner(
+            settings,
+            manifest_path=manifest,
+            client=client,
+            environment=environment,
+            platform_key="test-platform",
+            allowed_download_hosts={"runtime.test"},
+        )
+        settings.comfy_directory = new_directory
+        task = restored.start_restore()
+        assert task is not None
+        await task
+        assert restored.status("comfyui").state == "ready"
+        await restored.close()
+
+    assert settings.comfy_directory == new_directory
+    copied = new_directory / "custom_nodes" / managed.name
+    assert (copied / "node.py").read_bytes() == b"renewed after preinstall"
+    copied_manual = new_directory / "custom_nodes" / managed_manual.name
+    assert (copied_manual / "node.py").read_bytes() == b"reviewed after preinstall"
+    assert not (new_directory / "custom_nodes" / unmanaged.name).exists()
+    assert environment["LOCAL_LM_COMFY_DIRECTORY"] == str(new_directory)
+
+    # A repeated recovery with the same exact bytes is a no-op rather than a
+    # false conflict; changed bytes still compare by the bounded tree digest.
+    settings.comfy_directory = old_directory
+    settings.comfy_executable = old_executable
+    repeat = RuntimeProvisioner(
+        settings,
+        manifest_path=manifest,
+        environment={},
+        platform_key="test-platform",
+        allowed_download_hosts={"runtime.test"},
+    )
+    settings.comfy_directory = new_directory
+    task = repeat.start_restore()
+    assert task is not None
+    await task
+    assert repeat.status("comfyui").state == "ready"
+    await repeat.close()
+
+    original = (copied / "node.py").read_bytes()
+    changed = b"x" * len(original)
+    assert changed != original
+    (copied / "node.py").write_bytes(changed)
+    settings.comfy_directory = old_directory
+    settings.comfy_executable = old_executable
+    conflict = RuntimeProvisioner(
+        settings,
+        manifest_path=manifest,
+        environment={},
+        platform_key="test-platform",
+        allowed_download_hosts={"runtime.test"},
+    )
+    settings.comfy_directory = new_directory
+    task = conflict.start_restore()
+    assert task is not None
+    await task
+    assert conflict.status("comfyui").state == "missing"
+    assert (copied / "node.py").read_bytes() == changed
+    await conflict.close()
 
 
 def test_managed_registry_copy_budget_is_shared_across_folders(tmp_path: Path) -> None:
@@ -1254,26 +1417,41 @@ def test_comfy_manifest_fails_closed_when_audit_contract_is_omitted(
         RuntimeProvisioner._read_manifest(manifest)
 
 
-def test_pinned_comfy_review_accounts_for_every_distribution_and_license() -> None:
-    repository_root = Path(__file__).resolve().parents[3]
-    manifest_path = repository_root / "packaging" / "engines.json"
-    manifest = RuntimeProvisioner._read_manifest(manifest_path)
-    definition = manifest["engines"]["comfyui"]
+async def test_pinned_comfy_review_accounts_for_every_distribution_and_license(
+    settings: Settings,
+) -> None:
+    manifest_path = default_engine_manifest_path()
+    provisioner = RuntimeProvisioner(
+        settings,
+        manifest_path=manifest_path,
+        platform_key="windows-x86_64-nvidia-cu13",
+    )
+    definition = provisioner._definition("comfyui")
     assets = definition["runtime_assets"]
-    review_path = repository_root / "packaging" / "runtime-reviews" / "comfyui-v0.28.0.json"
+    selected_asset = provisioner._asset("comfyui", definition)
+    assert selected_asset is not None
+    selected_review = selected_asset["dependency_review"]
+    review_path = manifest_path.parent / selected_review["file"]
     review_bytes = review_path.read_bytes()
     review = json.loads(review_bytes)
 
-    assert hashlib.sha256(review_bytes).hexdigest() == (
-        "138a1432a49fafe465ea74c1b38c8211dc3b0e0a9fc1ae1d237067e3c92861a5"
-    )
+    assert definition["pinned_release"] == review["release"] == "v0.30.0"
+    assert selected_review["file"] == "runtime-reviews/comfyui-v0.30.0.json"
+    assert selected_review["asset_key"] == "windows-x86_64-nvidia-cu13"
+    assert hashlib.sha256(review_bytes).hexdigest() == selected_review["sha256"]
+    reviewed_selected_asset = review["assets"][selected_review["asset_key"]]
+    assert reviewed_selected_asset["source_asset_url"] == selected_asset["url"]
+    assert reviewed_selected_asset["source_asset_sha256"] == selected_asset["sha256"]
+    assert reviewed_selected_asset["source_asset_size_bytes"] == selected_asset["size_bytes"]
     assert review["vulnerability_audit"] == {
         "tool": "pip-audit 2.10.1",
         "service": "OSV",
         "dependency_count": 89,
         "known_vulnerabilities": 0,
+        # Both archives were downloaded and hashed for this release, so the
+        # inventory comes from the payloads rather than from their indexes.
         "requirements_source": (
-            "Exact dist-info identities from both portable archive indexes; "
+            "Exact dist-info identities from both downloaded portable archives; "
             "CUDA local version suffixes were normalized only for advisory lookup."
         ),
         "advisory_sources": [
@@ -1286,10 +1464,10 @@ def test_pinned_comfy_review_accounts_for_every_distribution_and_license() -> No
     expected_review_hash = hashlib.sha256(review_bytes).hexdigest()
     expected_inventory = {
         "windows-x86_64-nvidia-cu13": (
-            "f12087e3dfc278fc1f6521b6c61f8df03bdc9b0322df9c6464fb78a6dd08b69c"
+            "e71912637473513109c05d7cb0dee99d6f1864f13ce26ff2b468e7ad89025438"
         ),
         "windows-x86_64-nvidia-cu126": (
-            "2917012ad55e024468a0e0ca2cf128db1cdac17d1d055008759f9842839e71c2"
+            "09d226f9097d598a256fef80b60b82b59933c5b3ee49197fd1ac5d6473e59cac"
         ),
     }
     for asset_key, inventory_hash in expected_inventory.items():
@@ -1318,7 +1496,7 @@ def test_pinned_comfy_review_accounts_for_every_distribution_and_license() -> No
         for item in review["assets"]["windows-x86_64-nvidia-cu13"]["distributions"]
     }
     assert cu13_identities["torch-2.13.0+cu130.dist-info"]["license"].startswith("Apache-2.0")
-    assert cu13_identities["comfy_aimdo-0.4.10.dist-info"]["license"] == ("GPL-3.0-only")
+    assert cu13_identities["comfy_aimdo-0.4.11.dist-info"]["license"] == ("GPL-3.0-only")
     assert cu13["runtime_probe"]["python"] == "3.13.14"
     assert cu13["runtime_probe"]["packages"]["torch"] == "2.13.0+cu130"
     overlay = cu13["security_overlays"][0]
@@ -1330,3 +1508,40 @@ def test_pinned_comfy_review_accounts_for_every_distribution_and_license() -> No
     assert overlay["license"] == "Python-2.0"
     assert len(overlay["expected_files"]) == 34
     assert assets["windows-x86_64-nvidia-cu126"]["security_status"] == "blocked"
+    await provisioner.close()
+
+
+async def test_comfy_v028_marker_is_invalid_after_production_pin_moves_to_v030(
+    settings: Settings,
+) -> None:
+    provisioner = RuntimeProvisioner(
+        settings,
+        manifest_path=default_engine_manifest_path(),
+        platform_key="windows-x86_64-nvidia-cu13",
+    )
+    definition = provisioner._definition("comfyui")
+    asset = provisioner._asset("comfyui", definition)
+    assert asset is not None
+    install_root = provisioner._installation_path("comfyui", definition)
+    install_root.mkdir(parents=True)
+    (install_root / ".managed-runtime.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 3,
+                "engine": "comfyui",
+                "release": "v0.28.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert definition["pinned_release"] == "v0.30.0"
+    assert install_root.name == "v0.30.0"
+    assert not provisioner._managed_marker_owned(install_root, "comfyui", definition)
+    assert not provisioner._managed_marker_matches(
+        install_root,
+        "comfyui",
+        definition,
+        asset,
+    )
+    await provisioner.close()

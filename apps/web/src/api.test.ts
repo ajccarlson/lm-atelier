@@ -1105,3 +1105,50 @@ it("sends an empty reference list when nothing was chosen", async () => {
   const body = JSON.parse(String(fetchMock.mock.calls[1][1]?.body));
   expect(body.references).toEqual([]);
 });
+
+it("sends an explicit media output count and never leaks it into Auto", async () => {
+  vi.stubGlobal("confirm", vi.fn(() => true));
+  const accepted = () => new Response(JSON.stringify({ accepted: true }), {
+    status: 202,
+    headers: { "content-type": "application/json" },
+  });
+  const fetchMock = vi.fn()
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({ csrf_token: "csrf" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    )
+    .mockResolvedValueOnce(accepted())
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify({
+        detail: {
+          code: "route_confirmation_required",
+          plan: { operation: "text_to_image" },
+          estimate: {},
+        },
+      }), {
+        status: 409,
+        headers: { "content-type": "application/json" },
+      }),
+    )
+    .mockResolvedValueOnce(accepted());
+  vi.stubGlobal("fetch", fetchMock);
+
+  const { api } = await import("./api");
+  await api.sendTurn(
+    "chat-1", "four images", "image", [], {}, "image-count", "turns", undefined, [], 4,
+  );
+  await api.sendTurn(
+    "chat-1", "choose for me", "auto", [], {}, "auto-count", "turns", undefined, [], 4,
+  );
+
+  const imageBody = JSON.parse(String(fetchMock.mock.calls[1][1]?.body));
+  const autoBody = JSON.parse(String(fetchMock.mock.calls[2][1]?.body));
+  const confirmedAutoBody = JSON.parse(String(fetchMock.mock.calls[3][1]?.body));
+  expect(imageBody.output_count).toBe(4);
+  expect(autoBody).not.toHaveProperty("output_count");
+  expect(confirmedAutoBody.mode).toBe("image");
+  expect(confirmedAutoBody.confirm_media).toBe(true);
+  expect(confirmedAutoBody).not.toHaveProperty("output_count");
+});

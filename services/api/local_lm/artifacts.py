@@ -6,6 +6,7 @@ import mimetypes
 import os
 import re
 import shutil
+import stat
 import tempfile
 import uuid
 from contextlib import suppress
@@ -34,6 +35,16 @@ from .subprocess_env import subprocess_environment
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _STAGED_DELETION = re.compile(r"^(?P<digest>[0-9a-f]{64})\.[0-9a-f]{32}$")
 _MAX_VIDEO_POSTER_BYTES = 16 * 1024 * 1024
+
+
+def _file_identity(value: os.stat_result) -> tuple[int, int, int, int, int]:
+    return (
+        value.st_dev,
+        value.st_ino,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_nlink,
+    )
 
 
 @dataclass(frozen=True)
@@ -108,6 +119,95 @@ class ArtifactStore:
                 raise ValueError("artifact file checksum does not match its record")
             self._verified_files[path] = fingerprint
         return path
+
+    def read_verified_bytes(self, artifact: Artifact, *, maximum_bytes: int) -> bytes:
+        """Read one exact ordinary CAS file through its retained descriptor.
+
+        ``verified_path`` is appropriate for a downstream path consumer, but a
+        caller that is about to make an authority decision over bytes must not
+        verify one pathname object and then reopen whatever occupies that name.
+        This method binds the row, path, retained descriptor, digest, and byte
+        cap in one synchronous operation and refuses links or multiply-linked
+        files.
+        """
+
+        if type(maximum_bytes) is not int or maximum_bytes < 1:
+            raise ValueError("artifact read limit is invalid")
+        row_snapshot = (
+            artifact.id,
+            artifact.sha256,
+            artifact.relative_path,
+            artifact.size_bytes,
+        )
+        if (
+            type(row_snapshot[0]) is not str
+            or type(row_snapshot[1]) is not str
+            or type(row_snapshot[2]) is not str
+            or type(row_snapshot[3]) is not int
+            or row_snapshot[3] < 0
+        ):
+            raise ValueError("artifact record is invalid")
+        path = self.resolve(artifact)
+        if row_snapshot != (
+            artifact.id,
+            artifact.sha256,
+            artifact.relative_path,
+            artifact.size_bytes,
+        ):
+            raise ValueError("artifact record changed during verification")
+        if row_snapshot[3] > maximum_bytes:
+            raise ValueError("artifact exceeds the verified read limit")
+        if is_link_or_reparse(path, missing="raise", unreadable="raise"):
+            raise ValueError("artifact path uses a filesystem link")
+
+        try:
+            before = path.lstat()
+            flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(path, flags)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(path) from exc
+        except OSError as exc:
+            raise ValueError("artifact file could not be opened safely") from exc
+
+        try:
+            source = os.fdopen(descriptor, "rb", closefd=True)
+        except Exception:
+            os.close(descriptor)
+            raise
+        with source:
+            opened = os.fstat(source.fileno())
+            if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
+                raise ValueError("artifact file identity is invalid")
+            if _file_identity(before) != _file_identity(opened):
+                raise ValueError("artifact path changed before it was opened")
+            if opened.st_size != row_snapshot[3]:
+                raise ValueError("artifact file size does not match its record")
+            digest = hashlib.sha256()
+            content = bytearray()
+            while chunk := source.read(1024 * 1024):
+                if len(chunk) > maximum_bytes - len(content):
+                    raise ValueError("artifact exceeds the verified read limit")
+                digest.update(chunk)
+                content.extend(chunk)
+            after_descriptor = os.fstat(source.fileno())
+        try:
+            after_path = path.lstat()
+        except OSError as exc:
+            raise ValueError("artifact path changed during verification") from exc
+        if _file_identity(opened) != _file_identity(after_descriptor) or _file_identity(
+            after_descriptor
+        ) != _file_identity(after_path):
+            raise ValueError("artifact file changed during verification")
+        if len(content) != row_snapshot[3] or digest.hexdigest() != row_snapshot[1]:
+            raise ValueError("artifact file checksum does not match its record")
+        if row_snapshot != (
+            artifact.id,
+            artifact.sha256,
+            artifact.relative_path,
+            artifact.size_bytes,
+        ):
+            raise ValueError("artifact record changed during verification")
+        return bytes(content)
 
     def delivery_metadata(self, artifact: Artifact) -> tuple[Path, str, str]:
         path = self.verified_path(artifact)

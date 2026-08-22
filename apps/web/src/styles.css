@@ -493,6 +493,7 @@ h1, h2, h3 { margin: 0; }
 .mode-select { height: 32px; border-radius: 10px; display: flex; align-items: center; gap: 4px; padding: 0 7px; background: var(--panel-3); color: var(--ink-primary); }
 .mode-select select { appearance: none; border: 0; outline: 0; background: transparent; color: inherit; font-size: 12px; font-weight: 600; padding: 0; }
 .mode-select select option { background: var(--panel); }
+.output-count-select > span { font-size: 12px; font-weight: 600; }
 .mode-image { color: var(--atelier-soft); } .mode-video { color: var(--cream); } .mode-auto { color: var(--accent-2); }
 .composer-workflow-selector { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 230px; color: var(--ink-secondary); }
 .composer-workflow-selector .workflow-selector { display: flex; align-items: center; gap: 4px; }
@@ -1168,3 +1169,4 @@ h1, h2, h3 { margin: 0; }
 .library-attach-tile { display: block; width: 100%; padding: 0; border: 2px solid var(--line); border-radius: 10px; background: var(--surface-2); overflow: hidden; cursor: pointer; }
 .library-attach-tile.picked { border-color: var(--accent); }
 .library-attach-tile img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.asset-review { display: grid; gap: 0.4rem; }

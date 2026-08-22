@@ -68,6 +68,72 @@ def test_deduplicated_ingest_repairs_missing_and_corrupt_cas_files(
     assert store.verified_path(repaired_corrupt).read_bytes() == content
 
 
+def test_authority_read_binds_exact_descriptor_bytes_and_limit(
+    artifact_session: tuple[ArtifactStore, Session],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store, session = artifact_session
+    content = b"descriptor-bound-content"
+    artifact = store.ingest_bytes(session, content, kind=ArtifactKind.IMAGE, media_type="image/png")
+    session.commit()
+    path = store.resolve(artifact)
+
+    assert store.read_verified_bytes(artifact, maximum_bytes=len(content)) == content
+
+    open_calls = 0
+    real_open = os.open
+
+    def counted_open(value: str | bytes | os.PathLike[str] | os.PathLike[bytes], flags: int) -> int:
+        nonlocal open_calls
+        open_calls += 1
+        return real_open(value, flags)
+
+    monkeypatch.setattr(os, "open", counted_open)
+    with pytest.raises(ValueError, match="verified read limit"):
+        store.read_verified_bytes(artifact, maximum_bytes=len(content) - 1)
+    assert open_calls == 0
+    assert path.read_bytes() == content
+
+
+def test_authority_read_refuses_hard_links_and_same_metadata_path_swap(
+    artifact_session: tuple[ArtifactStore, Session],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store, session = artifact_session
+    content = b"original-authority"
+    artifact = store.ingest_bytes(session, content, kind=ArtifactKind.IMAGE, media_type="image/png")
+    session.commit()
+    path = store.resolve(artifact)
+    alias = path.with_name("alias")
+    os.link(path, alias)
+    try:
+        with pytest.raises(ValueError, match="identity is invalid"):
+            store.read_verified_bytes(artifact, maximum_bytes=len(content))
+    finally:
+        alias.unlink()
+
+    original = path.stat()
+    replacement = path.with_name("replacement")
+    replacement.write_bytes(b"forgery--authority")
+    os.utime(replacement, ns=(original.st_atime_ns, original.st_mtime_ns))
+    real_open = os.open
+    swapped = False
+
+    def swap_before_open(
+        value: str | bytes | os.PathLike[str] | os.PathLike[bytes], flags: int
+    ) -> int:
+        nonlocal swapped
+        if not swapped and Path(os.fsdecode(value)) == path:
+            swapped = True
+            os.replace(replacement, path)
+        return real_open(value, flags)
+
+    monkeypatch.setattr(os, "open", swap_before_open)
+    with pytest.raises(ValueError, match="changed before it was opened"):
+        store.read_verified_bytes(artifact, maximum_bytes=len(content))
+    assert swapped is True
+
+
 def test_artifact_delete_restores_file_when_database_transaction_rolls_back(
     artifact_session: tuple[ArtifactStore, Session],
 ) -> None:

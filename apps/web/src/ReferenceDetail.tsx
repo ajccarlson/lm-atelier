@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImageIcon, Plus, Trash2 } from "lucide-react";
+import { AssetReview } from "./AssetReview";
 import { api } from "./api";
 import { EmptyState } from "./EmptyState";
 import { ErrorCallout } from "./ErrorCallout";
@@ -306,6 +307,7 @@ export function ReferenceDetail({
                 <Trash2 />
               </button>
             </div>
+            <AssetReview subjectId={subject.id} asset={asset} onReviewed={refresh} />
           </li>
         ))}
       </ul>

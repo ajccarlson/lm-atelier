@@ -488,20 +488,27 @@ def _repository_identity(
         if value
     )
     architecture = candidates[0][:200] if candidates else None
-    normalized = " ".join(candidates).casefold()
-    family = _family_from_architecture(normalized, role)
+    family = _family_from_architecture(candidates, role)
     if not family:
         family = next((component.family for component in components if component.family), None)
     return architecture, family
 
 
-def _family_from_architecture(value: str, role: str) -> str | None:
+def _family_from_architecture(candidates: list[str], role: str) -> str | None:
+    normalized = " ".join(candidates).casefold()
     for contract in architecture_family_contracts():
+        if contract.id == "minimax-h3":
+            if role in contract.roles and any(
+                len(candidate) <= 200 and candidate.casefold() in contract.architecture_markers
+                for candidate in candidates
+            ):
+                return contract.id
+            continue
         if role in contract.roles and any(
-            marker in value for marker in contract.architecture_markers
+            marker in normalized for marker in contract.architecture_markers
         ):
             return contract.id
-    return "gguf" if role == "chat" and "gguf" in value else None
+    return "gguf" if role == "chat" and "gguf" in normalized else None
 
 
 def _component_kind_from_path(path: str, role: str) -> str:

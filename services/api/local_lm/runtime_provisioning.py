@@ -42,6 +42,7 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _MAX_RUNTIME_FILES = 250_000
 _MAX_RUNTIME_BYTES = 32 * 1024**3
 _REGISTRY_NODE_PREFIX = "lm-atelier-registry_"
+_MANAGED_NODE_PREFIXES = ("lm-atelier-node_", _REGISTRY_NODE_PREFIX)
 _MUTABLE_RUNTIME_DIRECTORIES = {
     "__pycache__",
     "custom_nodes",
@@ -117,6 +118,7 @@ class RuntimeProvisioner:
         ] = {}
         self.runtime_root.mkdir(parents=True, exist_ok=True)
         self.archive_root.mkdir(parents=True, exist_ok=True)
+        self._managed_node_source_releases = self._configured_managed_comfy_releases()
         self._restore_candidates = self._managed_restoration_candidates()
         for engine in self._restore_candidates:
             definition = self._definition(engine)
@@ -618,6 +620,8 @@ class RuntimeProvisioner:
         for source in self._managed_registry_node_sources(directory, final):
             if not source.exists():
                 continue
+            if source.resolve() == target.resolve():
+                continue
             if is_link_or_reparse(source, missing="assume_link", unreadable="assume_link"):
                 raise RuntimeProvisioningError(
                     "A managed Registry node source is not an ordinary directory."
@@ -627,21 +631,46 @@ class RuntimeProvisioner:
                     "A managed Registry node source is not an ordinary directory."
                 )
             for candidate in sorted(source.iterdir(), key=lambda item: item.name.casefold()):
-                if not candidate.name.startswith(_REGISTRY_NODE_PREFIX):
+                if not candidate.name.startswith(_MANAGED_NODE_PREFIXES):
                     continue
                 if candidate.name in restored:
                     continue
                 destination = target / candidate.name
                 if destination.exists():
-                    raise RuntimeProvisioningError(
-                        "The replacement runtime already contains a managed Registry node."
+                    added_entries, added_bytes, source_sha256 = self._managed_node_tree_identity(
+                        candidate,
+                        max_entries=_MAX_RUNTIME_FILES - copied_entries,
+                        max_bytes=_MAX_RUNTIME_BYTES - copied_bytes,
                     )
-                added_entries, added_bytes = self._copy_managed_registry_tree(
-                    candidate,
-                    destination,
-                    max_entries=_MAX_RUNTIME_FILES - copied_entries,
-                    max_bytes=_MAX_RUNTIME_BYTES - copied_bytes,
-                )
+                    destination_identity = self._managed_node_tree_identity(
+                        destination,
+                        max_entries=added_entries,
+                        max_bytes=added_bytes,
+                    )
+                    if destination_identity != (
+                        added_entries,
+                        added_bytes,
+                        source_sha256,
+                    ):
+                        raise RuntimeProvisioningError(
+                            "A managed custom node differs between runtime releases."
+                        )
+                else:
+                    restoring = target / f".lm-atelier-restoring-{uuid4().hex}"
+                    try:
+                        added_entries, added_bytes = self._copy_managed_registry_tree(
+                            candidate,
+                            restoring,
+                            max_entries=_MAX_RUNTIME_FILES - copied_entries,
+                            max_bytes=_MAX_RUNTIME_BYTES - copied_bytes,
+                        )
+                        if destination.exists():
+                            raise RuntimeProvisioningError(
+                                "The replacement runtime already contains a managed custom node."
+                            )
+                        os.replace(restoring, destination)
+                    finally:
+                        shutil.rmtree(restoring, ignore_errors=True)
                 copied_entries += added_entries
                 copied_bytes += added_bytes
                 restored.add(candidate.name)
@@ -651,15 +680,7 @@ class RuntimeProvisioner:
         directory: PurePosixPath,
         final: Path,
     ) -> tuple[Path, ...]:
-        engine_root = self.runtime_root / "comfyui"
-        releases: list[Path] = []
-        configured = self.settings.comfy_directory
-        if configured is not None:
-            configured_path = Path(configured).expanduser()
-            for parent in (configured_path, *configured_path.parents):
-                if parent.parent == engine_root:
-                    releases.append(parent)
-                    break
+        releases = list(self._managed_node_source_releases)
         if final.exists():
             releases.append(final)
 
@@ -671,6 +692,19 @@ class RuntimeProvisioner:
             seen.add(release)
             sources.append(release.joinpath(*directory.parts, "custom_nodes"))
         return tuple(sources)
+
+    def _configured_managed_comfy_releases(self) -> tuple[Path, ...]:
+        """Snapshot the configured managed release before background restore."""
+
+        configured = self.settings.comfy_directory
+        if configured is None:
+            return ()
+        engine_root = self.runtime_root / "comfyui"
+        configured_path = Path(configured).expanduser()
+        for parent in (configured_path, *configured_path.parents):
+            if parent.parent == engine_root:
+                return (parent,)
+        return ()
 
     def _managed_comfy_release_owned(self, release: Path) -> bool:
         try:
@@ -736,6 +770,57 @@ class RuntimeProvisioner:
                         )
                     shutil.copy2(child.path, output, follow_symlinks=False)
         return entries, total_size
+
+    @classmethod
+    def _managed_node_tree_identity(
+        cls,
+        root: Path,
+        *,
+        max_entries: int,
+        max_bytes: int,
+    ) -> tuple[int, int, str]:
+        """Hash one bounded ordinary tree for idempotent runtime restoration."""
+
+        if is_link_or_reparse(root, missing="assume_link", unreadable="assume_link"):
+            raise RuntimeProvisioningError("A managed custom node contains an unsupported link.")
+        if not root.is_dir():
+            raise RuntimeProvisioningError("A managed custom node is not an ordinary directory.")
+        digest = hashlib.sha256(b"lm-atelier-managed-custom-node-v1\0")
+        entries = 0
+        total_size = 0
+        stack: list[tuple[Path, PurePosixPath]] = [(root, PurePosixPath())]
+        while stack:
+            source_directory, relative_directory = stack.pop()
+            with os.scandir(source_directory) as scanned:
+                children = sorted(scanned, key=lambda child: child.name)
+            for child in children:
+                entries += 1
+                if entries > max_entries or cls._is_reparse_point(child):
+                    raise RuntimeProvisioningError(
+                        "A managed custom node has an unsupported shape."
+                    )
+                relative = relative_directory / child.name
+                encoded = relative.as_posix().encode("utf-8")
+                digest.update(len(encoded).to_bytes(4, "big"))
+                digest.update(encoded)
+                if child.is_dir(follow_symlinks=False):
+                    digest.update(b"D")
+                    stack.append((Path(child.path), relative))
+                    continue
+                if not child.is_file(follow_symlinks=False):
+                    raise RuntimeProvisioningError(
+                        "A managed custom node has an unsupported file type."
+                    )
+                size = child.stat(follow_symlinks=False).st_size
+                total_size += size
+                if total_size > max_bytes:
+                    raise RuntimeProvisioningError(
+                        "A managed custom node exceeds its allowed size."
+                    )
+                digest.update(b"F")
+                digest.update(size.to_bytes(8, "big"))
+                digest.update(bytes.fromhex(cls._sha256_file(Path(child.path))))
+        return entries, total_size, digest.hexdigest()
 
     def _prune_stale_staging(self, parent: Path, engine: RuntimeName) -> None:
         """Reclaim staging trees abandoned by an interrupted or failed attempt.
@@ -1005,6 +1090,13 @@ class RuntimeProvisioner:
                         engine,
                     )
                     continue
+                if engine == "comfyui":
+                    # A newer managed release can already be present before a
+                    # Registry package is renewed in the currently configured
+                    # release. Carry those application-owned node bytes before
+                    # switching the persisted runtime paths; afterwards the old
+                    # configured release is no longer discoverable authority.
+                    self._restore_managed_registry_nodes(final, asset, final)
                 installed = self._resolve_installed_paths(final, asset)
                 self._apply_configuration(engine, installed, persist=True)
                 self._states[engine] = self._status(

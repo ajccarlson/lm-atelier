@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-07-25",
+  "updated_at": "2026-08-11",
   "engines": {
     "llama.cpp": {
       "source": "https://github.com/ggml-org/llama.cpp",
@@ -68,12 +68,12 @@
     },
     "comfyui": {
       "source": "https://github.com/Comfy-Org/ComfyUI",
-      "pinned_release": "v0.28.0",
+      "pinned_release": "v0.30.0",
       "distribution": "external-gpl-3.0",
       "license": "GPL-3.0-only",
       "security_status": "checksum-pinned",
       "security_review": {
-        "reviewed_at": "2026-07-25",
+        "reviewed_at": "2026-08-11",
         "release_is_immutable": true,
         "package_audit": "OSV via pip-audit 2.10.1: no known vulnerabilities in 89 pinned Python distributions",
         "upstream_advisories": [
@@ -84,9 +84,9 @@
       },
       "runtime_assets": {
         "windows-x86_64-nvidia-cu13": {
-          "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.28.0/ComfyUI_windows_portable_nvidia.7z",
-          "sha256": "797183fe6165b96a1800793cdc2110e4c62c45e8775647a7166fe8c6290e2fd9",
-          "size_bytes": 2092156323,
+          "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.30.0/ComfyUI_windows_portable_nvidia.7z",
+          "sha256": "f4353d069dd7342e3bef421f07f003cca53ca84168102705cfc83f66449f5ae5",
+          "size_bytes": 2110797220,
           "required_free_bytes": 8589934592,
           "max_uncompressed_bytes": 8589934592,
           "max_entries": 200000,
@@ -94,10 +94,10 @@
           "executable": "ComfyUI_windows_portable/python_embeded/python.exe",
           "directory": "ComfyUI_windows_portable/ComfyUI",
           "dependency_inventory_count": 89,
-          "dependency_inventory_sha256": "f12087e3dfc278fc1f6521b6c61f8df03bdc9b0322df9c6464fb78a6dd08b69c",
+          "dependency_inventory_sha256": "e71912637473513109c05d7cb0dee99d6f1864f13ce26ff2b468e7ad89025438",
           "dependency_review": {
-            "file": "runtime-reviews/comfyui-v0.28.0.json",
-            "sha256": "138a1432a49fafe465ea74c1b38c8211dc3b0e0a9fc1ae1d237067e3c92861a5",
+            "file": "runtime-reviews/comfyui-v0.30.0.json",
+            "sha256": "ab2d4f53fb10582f3e5c769ac4e0842b0b796b28ce9882e702a6bca74847dc89",
             "asset_key": "windows-x86_64-nvidia-cu13"
           },
           "security_overlays": [
@@ -156,7 +156,7 @@
           ],
           "runtime_probe": {
             "python": "3.13.14",
-            "comfyui": "0.28.0",
+            "comfyui": "0.30.0",
             "imports": [
               "PIL",
               "setuptools",
@@ -174,9 +174,9 @@
           }
         },
         "windows-x86_64-nvidia-cu126": {
-          "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.28.0/ComfyUI_windows_portable_nvidia_cu126.7z",
-          "sha256": "6af1b60b6a1fad780b07871e4ff356ac04a1807755ee13c6050e3ec3a4157cc0",
-          "size_bytes": 2034160963,
+          "url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.30.0/ComfyUI_windows_portable_nvidia_cu126.7z",
+          "sha256": "3e4bc720dd68f166ed8af67f4b675ef4826e1912f2bf3a0965909203a526a965",
+          "size_bytes": 2052856402,
           "required_free_bytes": 8589934592,
           "max_uncompressed_bytes": 8589934592,
           "max_entries": 200000,
@@ -184,10 +184,10 @@
           "executable": "ComfyUI_windows_portable/python_embeded/python.exe",
           "directory": "ComfyUI_windows_portable/ComfyUI",
           "dependency_inventory_count": 89,
-          "dependency_inventory_sha256": "2917012ad55e024468a0e0ca2cf128db1cdac17d1d055008759f9842839e71c2",
+          "dependency_inventory_sha256": "09d226f9097d598a256fef80b60b82b59933c5b3ee49197fd1ac5d6473e59cac",
           "dependency_review": {
-            "file": "runtime-reviews/comfyui-v0.28.0.json",
-            "sha256": "138a1432a49fafe465ea74c1b38c8211dc3b0e0a9fc1ae1d237067e3c92861a5",
+            "file": "runtime-reviews/comfyui-v0.30.0.json",
+            "sha256": "ab2d4f53fb10582f3e5c769ac4e0842b0b796b28ce9882e702a6bca74847dc89",
             "asset_key": "windows-x86_64-nvidia-cu126"
           },
           "security_status": "blocked",

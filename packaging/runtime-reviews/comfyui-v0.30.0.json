@@ -1,0 +1,2671 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-08-11",
+  "release": "v0.30.0",
+  "review_scope": "Exact Python distribution identities and declared licenses in both official ComfyUI v0.30.0 Windows NVIDIA portable assets, verified against the downloaded payloads rather than their indexes alone.",
+  "asset_evidence": {
+    "release_metadata": "https://api.github.com/repos/Comfy-Org/ComfyUI/releases/tags/v0.30.0",
+    "release_page": "https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.30.0",
+    "method": "Immutable release metadata plus the complete payloads: both assets were downloaded, their SHA-256 computed over the whole file, and their dist-info identities, METADATA and bundled license bodies read from the archives themselves. The embedded CPython version was read from the python DLL version resource rather than by executing it."
+  },
+  "vulnerability_audit": {
+    "tool": "pip-audit 2.10.1",
+    "service": "OSV",
+    "dependency_count": 89,
+    "known_vulnerabilities": 0,
+    "requirements_source": "Exact dist-info identities from both downloaded portable archives; CUDA local version suffixes were normalized only for advisory lookup.",
+    "advisory_sources": [
+      "https://github.com/Comfy-Org/ComfyUI/security/advisories",
+      "https://github.com/pytorch/pytorch/security/advisories",
+      "https://docs.python.org/3.13/whatsnew/changelog.html",
+      "https://docs.python.org/3.12/whatsnew/changelog.html"
+    ]
+  },
+  "change_from_previous_release": {
+    "previous_release": "v0.28.0",
+    "distributions_added": 0,
+    "distributions_removed": 0,
+    "distributions_changed": 23,
+    "note": "The distribution set is identical in membership and count; 23 pinned versions moved. torch 2.13.0, torchaudio, torchvision, Pillow and setuptools are unchanged, so the runtime probe's package expectations carry over and only its ComfyUI version moves. The frontend package moved 1.45.21 to 1.47.11, which is a certification input rather than a dependency fact."
+  },
+  "non_dist_info_components": [
+    {
+      "name": "ComfyUI",
+      "version": "0.30.0",
+      "license": "GPL-3.0-only",
+      "license_source": "https://github.com/Comfy-Org/ComfyUI/blob/v0.30.0/LICENSE",
+      "source_present_in_archive": true
+    },
+    {
+      "name": "CPython Windows embeddable security overlay",
+      "version": "3.13.14",
+      "license": "Python-2.0; bundled third-party notices retained in LICENSE.txt",
+      "license_source": "https://www.python.org/downloads/release/python-31314/",
+      "artifact": "https://www.python.org/ftp/python/3.13.14/python-3.13.14-embed-amd64.zip",
+      "sha256": "90b4e5b9898b72d744650524bff92377c367f44bd5fbd09e3148656c080ad907"
+    }
+  ],
+  "limitations": [
+    "This is a point-in-time technical inventory and vulnerability review, not legal advice or final legal approval.",
+    "License bodies were read where declared metadata carried no SPDX expression; the remaining bundled notices are indexed by path rather than hashed individually.",
+    "The CUDA 12.6 tier remains blocked: this release still embeds CPython 3.12.10, and no patched official Windows 3.12 binary exists. It is inventoried here so the manifest stays coherent, not to enable it.",
+    "An isolated runtime version and import probe still has to run against a provisioned tree before this release can be activated, and provisioning is held."
+  ],
+  "assets": {
+    "windows-x86_64-nvidia-cu13": {
+      "source_asset_url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.30.0/ComfyUI_windows_portable_nvidia.7z",
+      "source_asset_sha256": "f4353d069dd7342e3bef421f07f003cca53ca84168102705cfc83f66449f5ae5",
+      "source_asset_size_bytes": 2110797220,
+      "inventory_count": 89,
+      "inventory_sha256": "e71912637473513109c05d7cb0dee99d6f1864f13ce26ff2b468e7ad89025438",
+      "python": "3.13 (replaced before activation by the audited 3.13.14 security overlay)",
+      "distributions": [
+        {
+          "dist_info": "aiohappyeyeballs-2.7.1.dist-info",
+          "name": "aiohappyeyeballs",
+          "version": "2.7.1",
+          "license": "PSF-2.0",
+          "license_source": "https://pypi.org/pypi/aiohappyeyeballs/2.7.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "aiohttp-3.14.3.dist-info",
+          "name": "aiohttp",
+          "version": "3.14.3",
+          "license": "Apache-2.0 AND MIT",
+          "license_source": "https://pypi.org/pypi/aiohttp/3.14.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt",
+            "licenses/vendor",
+            "licenses/vendor/llhttp",
+            "licenses/vendor/llhttp/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "aiosignal-1.4.0.dist-info",
+          "name": "aiosignal",
+          "version": "1.4.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/aiosignal/1.4.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "alembic-1.18.5.dist-info",
+          "name": "alembic",
+          "version": "1.18.5",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/alembic/1.18.5/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "annotated_doc-0.0.5.dist-info",
+          "name": "annotated-doc",
+          "version": "0.0.5",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/annotated_doc/0.0.5/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "annotated_types-0.8.0.dist-info",
+          "name": "annotated-types",
+          "version": "0.8.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/annotated_types/0.8.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "anyio-4.14.2.dist-info",
+          "name": "anyio",
+          "version": "4.14.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/anyio/4.14.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "attrs-26.1.0.dist-info",
+          "name": "attrs",
+          "version": "26.1.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/attrs/26.1.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "av-18.0.0.dist-info",
+          "name": "av",
+          "version": "18.0.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/av/18.0.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.py",
+            "licenses/AUTHORS.rst",
+            "licenses/LICENSE.txt",
+            "licenses/__pycache__",
+            "licenses/__pycache__/AUTHORS.cpython-313.pyc"
+          ]
+        },
+        {
+          "dist_info": "blake3-1.0.9.dist-info",
+          "name": "blake3",
+          "version": "1.0.9",
+          "license": "CC0-1.0 OR Apache-2.0",
+          "license_source": "https://pypi.org/pypi/blake3/1.0.9/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "certifi-2026.7.22.dist-info",
+          "name": "certifi",
+          "version": "2026.7.22",
+          "license": "MPL-2.0",
+          "license_source": "https://pypi.org/pypi/certifi/2026.7.22/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "cffi-2.1.0.dist-info",
+          "name": "cffi",
+          "version": "2.1.0",
+          "license": "MIT-0",
+          "license_source": "https://pypi.org/project/cffi/2.1.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "charset_normalizer-3.4.9.dist-info",
+          "name": "charset-normalizer",
+          "version": "3.4.9",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/charset-normalizer/3.4.9/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "click-8.4.2.dist-info",
+          "name": "click",
+          "version": "8.4.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/click/8.4.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "colorama-0.4.6.dist-info",
+          "name": "colorama",
+          "version": "0.4.6",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/colorama/0.4.6/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "comfy_aimdo-0.4.11.dist-info",
+          "name": "comfy-aimdo",
+          "version": "0.4.11",
+          "license": "GPL-3.0-only",
+          "license_source": "https://github.com/Comfy-Org/comfy-aimdo/blob/v0.4.11/LICENSE",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfy_angle-0.1.0.dist-info",
+          "name": "comfy-angle",
+          "version": "0.1.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/comfy_angle/0.1.0/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfy_kitchen-0.2.26.dist-info",
+          "name": "comfy-kitchen",
+          "version": "0.2.26",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/comfy_kitchen/0.2.26/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_embedded_docs-0.5.9.dist-info",
+          "name": "comfyui-embedded-docs",
+          "version": "0.5.9",
+          "license": "GPL-3.0",
+          "license_source": "https://pypi.org/project/comfyui_embedded_docs/0.5.9/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_frontend_package-1.47.11.dist-info",
+          "name": "comfyui-frontend-package",
+          "version": "1.47.11",
+          "license": "GPL-3.0-only",
+          "license_source": "https://github.com/Comfy-Org/ComfyUI_frontend/blob/v1.47.11/LICENSE",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates-0.11.27.dist-info",
+          "name": "comfyui-workflow-templates",
+          "version": "0.11.27",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/comfyui_workflow_templates/0.11.27/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_core-0.3.292.dist-info",
+          "name": "comfyui-workflow-templates-core",
+          "version": "0.3.292",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_core/0.3.292/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_json-0.1.27.dist-info",
+          "name": "comfyui-workflow-templates-json",
+          "version": "0.1.27",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_json/0.1.27/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_api-0.3.84.dist-info",
+          "name": "comfyui-workflow-templates-media-api",
+          "version": "0.3.84",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_api/0.3.84/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_assets_01-0.1.17.dist-info",
+          "name": "comfyui-workflow-templates-media-assets-01",
+          "version": "0.1.17",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_assets_01/0.1.17/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_image-0.3.160.dist-info",
+          "name": "comfyui-workflow-templates-media-image",
+          "version": "0.3.160",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_image/0.3.160/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_other-0.3.229.dist-info",
+          "name": "comfyui-workflow-templates-media-other",
+          "version": "0.3.229",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_other/0.3.229/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_video-0.3.101.dist-info",
+          "name": "comfyui-workflow-templates-media-video",
+          "version": "0.3.101",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_video/0.3.101/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "einops-0.8.2.dist-info",
+          "name": "einops",
+          "version": "0.8.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/einops/0.8.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "filelock-3.32.0.dist-info",
+          "name": "filelock",
+          "version": "3.32.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/filelock/3.32.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "frozenlist-1.8.0.dist-info",
+          "name": "frozenlist",
+          "version": "1.8.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/frozenlist/1.8.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "fsspec-2026.7.0.dist-info",
+          "name": "fsspec",
+          "version": "2026.7.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/fsspec/2026.7.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "greenlet-3.5.4.dist-info",
+          "name": "greenlet",
+          "version": "3.5.4",
+          "license": "MIT AND PSF-2.0",
+          "license_source": "https://pypi.org/project/greenlet/3.5.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.PSF"
+          ]
+        },
+        {
+          "dist_info": "h11-0.16.0.dist-info",
+          "name": "h11",
+          "version": "0.16.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/h11/0.16.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "hf_xet-1.5.2.dist-info",
+          "name": "hf-xet",
+          "version": "1.5.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/project/hf_xet/1.5.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "httpcore-1.0.9.dist-info",
+          "name": "httpcore",
+          "version": "1.0.9",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/httpcore/1.0.9/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "httpx-0.28.1.dist-info",
+          "name": "httpx",
+          "version": "0.28.1",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/httpx/0.28.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "huggingface_hub-1.25.1.dist-info",
+          "name": "huggingface-hub",
+          "version": "1.25.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/huggingface_hub/1.25.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "idna-3.18.dist-info",
+          "name": "idna",
+          "version": "3.18",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/idna/3.18/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "jinja2-3.1.6.dist-info",
+          "name": "jinja2",
+          "version": "3.1.6",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/jinja2/3.1.6/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "kornia-0.8.3.dist-info",
+          "name": "kornia",
+          "version": "0.8.3",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/kornia/0.8.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "kornia_rs-0.1.14.dist-info",
+          "name": "kornia-rs",
+          "version": "0.1.14",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/kornia-rs/0.1.14/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "mako-1.3.12.dist-info",
+          "name": "mako",
+          "version": "1.3.12",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/mako/1.3.12/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "markdown_it_py-4.2.0.dist-info",
+          "name": "markdown-it-py",
+          "version": "4.2.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.markdown-it"
+          ]
+        },
+        {
+          "dist_info": "markupsafe-3.0.3.dist-info",
+          "name": "markupsafe",
+          "version": "3.0.3",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/markupsafe/3.0.3/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "mdurl-0.1.2.dist-info",
+          "name": "mdurl",
+          "version": "0.1.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/mdurl/0.1.2/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "mpmath-1.3.0.dist-info",
+          "name": "mpmath",
+          "version": "1.3.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/mpmath/1.3.0/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "multidict-6.7.1.dist-info",
+          "name": "multidict",
+          "version": "6.7.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/multidict/6.7.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "networkx-3.6.1.dist-info",
+          "name": "networkx",
+          "version": "3.6.1",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/networkx/3.6.1/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "numpy-2.5.1.dist-info",
+          "name": "numpy",
+          "version": "2.5.1",
+          "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+          "license_source": "https://pypi.org/project/numpy/2.5.1/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt",
+            "licenses/numpy",
+            "licenses/numpy/_core",
+            "licenses/numpy/_core/include",
+            "licenses/numpy/_core/include/numpy",
+            "licenses/numpy/_core/include/numpy/libdivide",
+            "licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+            "licenses/numpy/_core/src",
+            "licenses/numpy/_core/src/common",
+            "licenses/numpy/_core/src/common/pythoncapi-compat",
+            "licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+            "licenses/numpy/_core/src/highway",
+            "licenses/numpy/_core/src/highway/LICENSE",
+            "licenses/numpy/_core/src/multiarray",
+            "licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+            "licenses/numpy/_core/src/npysort",
+            "licenses/numpy/_core/src/npysort/x86-simd-sort",
+            "licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+            "licenses/numpy/_core/src/umath",
+            "licenses/numpy/_core/src/umath/svml",
+            "licenses/numpy/_core/src/umath/svml/LICENSE",
+            "licenses/numpy/fft",
+            "licenses/numpy/fft/pocketfft",
+            "licenses/numpy/fft/pocketfft/LICENSE.md",
+            "licenses/numpy/linalg",
+            "licenses/numpy/linalg/lapack_lite",
+            "licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+            "licenses/numpy/ma",
+            "licenses/numpy/ma/LICENSE",
+            "licenses/numpy/random",
+            "licenses/numpy/random/LICENSE.md",
+            "licenses/numpy/random/src",
+            "licenses/numpy/random/src/distributions",
+            "licenses/numpy/random/src/distributions/LICENSE.md",
+            "licenses/numpy/random/src/mt19937",
+            "licenses/numpy/random/src/mt19937/LICENSE.md",
+            "licenses/numpy/random/src/pcg64",
+            "licenses/numpy/random/src/pcg64/LICENSE.md",
+            "licenses/numpy/random/src/philox",
+            "licenses/numpy/random/src/philox/LICENSE.md",
+            "licenses/numpy/random/src/sfc64",
+            "licenses/numpy/random/src/sfc64/LICENSE.md",
+            "licenses/numpy/random/src/splitmix64",
+            "licenses/numpy/random/src/splitmix64/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "packaging-26.2.dist-info",
+          "name": "packaging",
+          "version": "26.2",
+          "license": "Apache-2.0 OR BSD-2-Clause",
+          "license_source": "https://pypi.org/project/packaging/26.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.APACHE",
+            "licenses/LICENSE.BSD"
+          ]
+        },
+        {
+          "dist_info": "pillow-12.3.0.dist-info",
+          "name": "pillow",
+          "version": "12.3.0",
+          "license": "MIT-CMU",
+          "license_source": "https://pypi.org/project/pillow/12.3.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pip-26.2.dist-info",
+          "name": "pip",
+          "version": "26.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pip/26.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.txt",
+            "licenses/LICENSE.txt",
+            "licenses/src",
+            "licenses/src/pip",
+            "licenses/src/pip/_vendor",
+            "licenses/src/pip/_vendor/cachecontrol",
+            "licenses/src/pip/_vendor/cachecontrol/LICENSE.txt",
+            "licenses/src/pip/_vendor/certifi",
+            "licenses/src/pip/_vendor/certifi/LICENSE",
+            "licenses/src/pip/_vendor/distlib",
+            "licenses/src/pip/_vendor/distlib/LICENSE.txt",
+            "licenses/src/pip/_vendor/distro",
+            "licenses/src/pip/_vendor/distro/LICENSE",
+            "licenses/src/pip/_vendor/idna",
+            "licenses/src/pip/_vendor/idna/LICENSE.md",
+            "licenses/src/pip/_vendor/msgpack",
+            "licenses/src/pip/_vendor/msgpack/COPYING",
+            "licenses/src/pip/_vendor/packaging",
+            "licenses/src/pip/_vendor/packaging/LICENSE",
+            "licenses/src/pip/_vendor/packaging/LICENSE.APACHE",
+            "licenses/src/pip/_vendor/packaging/LICENSE.BSD",
+            "licenses/src/pip/_vendor/pkg_resources",
+            "licenses/src/pip/_vendor/pkg_resources/LICENSE",
+            "licenses/src/pip/_vendor/platformdirs",
+            "licenses/src/pip/_vendor/platformdirs/LICENSE",
+            "licenses/src/pip/_vendor/pygments",
+            "licenses/src/pip/_vendor/pygments/LICENSE",
+            "licenses/src/pip/_vendor/pyproject_hooks",
+            "licenses/src/pip/_vendor/pyproject_hooks/LICENSE",
+            "licenses/src/pip/_vendor/requests",
+            "licenses/src/pip/_vendor/requests/LICENSE",
+            "licenses/src/pip/_vendor/resolvelib",
+            "licenses/src/pip/_vendor/resolvelib/LICENSE",
+            "licenses/src/pip/_vendor/rich",
+            "licenses/src/pip/_vendor/rich/LICENSE",
+            "licenses/src/pip/_vendor/tomli",
+            "licenses/src/pip/_vendor/tomli/LICENSE",
+            "licenses/src/pip/_vendor/tomli_w",
+            "licenses/src/pip/_vendor/tomli_w/LICENSE",
+            "licenses/src/pip/_vendor/truststore",
+            "licenses/src/pip/_vendor/truststore/LICENSE",
+            "licenses/src/pip/_vendor/urllib3",
+            "licenses/src/pip/_vendor/urllib3/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "propcache-0.5.2.dist-info",
+          "name": "propcache",
+          "version": "0.5.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/propcache/0.5.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "psutil-7.2.2.dist-info",
+          "name": "psutil",
+          "version": "7.2.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/psutil/7.2.2/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pycparser-3.0.dist-info",
+          "name": "pycparser",
+          "version": "3.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/pycparser/3.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic-2.13.4.dist-info",
+          "name": "pydantic",
+          "version": "2.13.4",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic/2.13.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic_core-2.46.4.dist-info",
+          "name": "pydantic-core",
+          "version": "2.46.4",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic_core/2.46.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic_settings-2.14.2.dist-info",
+          "name": "pydantic-settings",
+          "version": "2.14.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic_settings/2.14.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pygit2-1.19.3.dist-info",
+          "name": "pygit2",
+          "version": "1.19.3",
+          "license": "GPL-2.0-only WITH LicenseRef-libgit2-linking-exception",
+          "license_source": "https://pypi.org/pypi/pygit2/1.19.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.md",
+            "licenses/COPYING"
+          ]
+        },
+        {
+          "dist_info": "pygments-2.20.0.dist-info",
+          "name": "pygments",
+          "version": "2.20.0",
+          "license": "BSD-2-Clause",
+          "license_source": "https://pypi.org/project/pygments/2.20.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pyopengl-3.1.10.dist-info",
+          "name": "pyopengl",
+          "version": "3.1.10",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/pyopengl/3.1.10/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "python_dotenv-1.2.2.dist-info",
+          "name": "python-dotenv",
+          "version": "1.2.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/python-dotenv/1.2.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pyyaml-6.0.3.dist-info",
+          "name": "pyyaml",
+          "version": "6.0.3",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/pyyaml/6.0.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "regex-2026.7.19.dist-info",
+          "name": "regex",
+          "version": "2026.7.19",
+          "license": "Apache-2.0 AND CNRI-Python",
+          "license_source": "https://pypi.org/project/regex/2026.7.19/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "requests-2.34.2.dist-info",
+          "name": "requests",
+          "version": "2.34.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/requests/2.34.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "rich-15.0.0.dist-info",
+          "name": "rich",
+          "version": "15.0.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/rich/15.0.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "safetensors-0.8.0.dist-info",
+          "name": "safetensors",
+          "version": "0.8.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/safetensors/0.8.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "scipy-1.18.0.dist-info",
+          "name": "scipy",
+          "version": "1.18.0",
+          "license": "BSD-3-Clause; bundled third-party license notices retained in the pinned wheel",
+          "license_source": "https://pypi.org/pypi/scipy/1.18.0/json",
+          "indexed_license_files": [
+            "LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "sentencepiece-0.2.2.dist-info",
+          "name": "sentencepiece",
+          "version": "0.2.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/project/sentencepiece/0.2.2/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "setuptools-83.0.0.dist-info",
+          "name": "setuptools",
+          "version": "83.0.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/setuptools/83.0.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "shellingham-1.5.4.dist-info",
+          "name": "shellingham",
+          "version": "1.5.4",
+          "license": "ISC",
+          "license_source": "https://pypi.org/pypi/shellingham/1.5.4/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "simpleeval-1.0.7.dist-info",
+          "name": "simpleeval",
+          "version": "1.0.7",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/simpleeval/1.0.7/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENCE"
+          ]
+        },
+        {
+          "dist_info": "spandrel-0.4.2.dist-info",
+          "name": "spandrel",
+          "version": "0.4.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/spandrel/0.4.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "sqlalchemy-2.0.51.dist-info",
+          "name": "sqlalchemy",
+          "version": "2.0.51",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/sqlalchemy/2.0.51/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "sympy-1.14.0.dist-info",
+          "name": "sympy",
+          "version": "1.14.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/sympy/1.14.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "tokenizers-0.22.2.dist-info",
+          "name": "tokenizers",
+          "version": "0.22.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/tokenizers/0.22.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "torch-2.13.0+cu130.dist-info",
+          "name": "torch",
+          "version": "2.13.0+cu130",
+          "license": "Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT",
+          "license_source": "https://pypi.org/project/torch/2.13.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/third_party",
+            "licenses/third_party/FP16",
+            "licenses/third_party/FP16/LICENSE",
+            "licenses/third_party/FXdiv",
+            "licenses/third_party/FXdiv/LICENSE",
+            "licenses/third_party/NNPACK",
+            "licenses/third_party/NNPACK/LICENSE",
+            "licenses/third_party/NVTX",
+            "licenses/third_party/NVTX/LICENSE.txt",
+            "licenses/third_party/NVTX/docs",
+            "licenses/third_party/NVTX/docs/LICENSE.txt",
+            "licenses/third_party/NVTX/python",
+            "licenses/third_party/NVTX/python/LICENSE.txt",
+            "licenses/third_party/NVTX/tools",
+            "licenses/third_party/NVTX/tools/docs",
+            "licenses/third_party/NVTX/tools/docs/github-markdown-css",
+            "licenses/third_party/NVTX/tools/docs/github-markdown-css/LICENSE",
+            "licenses/third_party/VulkanMemoryAllocator",
+            "licenses/third_party/VulkanMemoryAllocator/LICENSE.txt",
+            "licenses/third_party/XNNPACK",
+            "licenses/third_party/XNNPACK/LICENSE",
+            "licenses/third_party/aiter",
+            "licenses/third_party/aiter/3rdparty",
+            "licenses/third_party/aiter/3rdparty/composable_kernel",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/docs",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/aiter/LICENSE",
+            "licenses/third_party/benchmark",
+            "licenses/third_party/benchmark/LICENSE",
+            "licenses/third_party/composable_kernel",
+            "licenses/third_party/composable_kernel/LICENSE",
+            "licenses/third_party/composable_kernel/docs",
+            "licenses/third_party/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/cpp-httplib",
+            "licenses/third_party/cpp-httplib/LICENSE",
+            "licenses/third_party/cpuinfo",
+            "licenses/third_party/cpuinfo/LICENSE",
+            "licenses/third_party/cpuinfo/deps",
+            "licenses/third_party/cpuinfo/deps/clog",
+            "licenses/third_party/cpuinfo/deps/clog/LICENSE",
+            "licenses/third_party/cudnn_frontend",
+            "licenses/third_party/cudnn_frontend/LICENSE.txt",
+            "licenses/third_party/cutlass",
+            "licenses/third_party/cutlass/LICENSE.txt",
+            "licenses/third_party/cutlass/python",
+            "licenses/third_party/cutlass/python/LICENSE.txt",
+            "licenses/third_party/fbgemm",
+            "licenses/third_party/fbgemm/LICENSE",
+            "licenses/third_party/fbgemm/external",
+            "licenses/third_party/fbgemm/external/composable_kernel",
+            "licenses/third_party/fbgemm/external/composable_kernel/LICENSE",
+            "licenses/third_party/fbgemm/external/composable_kernel/docs",
+            "licenses/third_party/fbgemm/external/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/fbgemm/external/cpuinfo",
+            "licenses/third_party/fbgemm/external/cpuinfo/LICENSE",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps/clog",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps/clog/LICENSE",
+            "licenses/third_party/fbgemm/external/cutlass",
+            "licenses/third_party/fbgemm/external/cutlass/LICENSE.txt",
+            "licenses/third_party/fbgemm/external/cutlass/python",
+            "licenses/third_party/fbgemm/external/cutlass/python/LICENSE.txt",
+            "licenses/third_party/fbgemm/external/googletest",
+            "licenses/third_party/fbgemm/external/googletest/LICENSE",
+            "licenses/third_party/fbgemm/external/hipify_torch",
+            "licenses/third_party/fbgemm/external/hipify_torch/LICENSE.txt",
+            "licenses/third_party/fbgemm/fbgemm_gpu",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src/general",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src/general/LICENSE.rst",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental/hstu",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental/hstu/LICENSE",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops/mx",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops/mx/LICENSE",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize/mx",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize/mx/LICENSE",
+            "licenses/third_party/flash-attention",
+            "licenses/third_party/flash-attention/LICENSE",
+            "licenses/third_party/flash-attention/csrc",
+            "licenses/third_party/flash-attention/csrc/composable_kernel",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/LICENSE",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/docs",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/flash-attention/csrc/cutlass",
+            "licenses/third_party/flash-attention/csrc/cutlass/LICENSE.txt",
+            "licenses/third_party/flash-attention/csrc/cutlass/python",
+            "licenses/third_party/flash-attention/csrc/cutlass/python/LICENSE.txt",
+            "licenses/third_party/flash-attention/flash_attn",
+            "licenses/third_party/flash-attention/flash_attn/cute",
+            "licenses/third_party/flash-attention/flash_attn/cute/LICENSE",
+            "licenses/third_party/flash-attention/third_party",
+            "licenses/third_party/flash-attention/third_party/aiter",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/docs",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/flash-attention/third_party/aiter/LICENSE",
+            "licenses/third_party/flatbuffers",
+            "licenses/third_party/flatbuffers/LICENSE",
+            "licenses/third_party/flatbuffers/dart",
+            "licenses/third_party/flatbuffers/dart/LICENSE",
+            "licenses/third_party/flatbuffers/swift",
+            "licenses/third_party/flatbuffers/swift/LICENSE",
+            "licenses/third_party/fmt",
+            "licenses/third_party/fmt/LICENSE",
+            "licenses/third_party/gemmlowp",
+            "licenses/third_party/gemmlowp/gemmlowp",
+            "licenses/third_party/gemmlowp/gemmlowp/LICENSE",
+            "licenses/third_party/gloo",
+            "licenses/third_party/gloo/LICENSE",
+            "licenses/third_party/googletest",
+            "licenses/third_party/googletest/LICENSE",
+            "licenses/third_party/ideep",
+            "licenses/third_party/ideep/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn",
+            "licenses/third_party/ideep/mkl-dnn/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn/third_party",
+            "licenses/third_party/ideep/mkl-dnn/third_party/gtest",
+            "licenses/third_party/ideep/mkl-dnn/third_party/gtest/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn/third_party/opencl",
+            "licenses/third_party/ideep/mkl-dnn/third_party/opencl/LICENSE",
+            "licenses/third_party/kineto",
+            "licenses/third_party/kineto/LICENSE",
+            "licenses/third_party/kineto/libkineto",
+            "licenses/third_party/kineto/libkineto/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty/colorama",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty/colorama/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/test",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/test/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/fmt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/fmt/LICENSE.rst",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/googletest/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty/doctest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty/doctest/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party/cpplint",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party/cpplint/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/pfs",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/pfs/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest/cJSON",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest/cJSON/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.5.2",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.5.2/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.8.0",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.8.0/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts/generator",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/fmt",
+            "licenses/third_party/kineto/libkineto/third_party/fmt/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/googletest/LICENSE",
+            "licenses/third_party/llvm-openmp",
+            "licenses/third_party/llvm-openmp/LICENSE.txt",
+            "licenses/third_party/mimalloc",
+            "licenses/third_party/mimalloc/LICENSE",
+            "licenses/third_party/miniz-3.0.2",
+            "licenses/third_party/miniz-3.0.2/LICENSE",
+            "licenses/third_party/mslk",
+            "licenses/third_party/mslk/LICENSE",
+            "licenses/third_party/mslk/external",
+            "licenses/third_party/mslk/external/composable_kernel",
+            "licenses/third_party/mslk/external/composable_kernel/LICENSE",
+            "licenses/third_party/mslk/external/composable_kernel/docs",
+            "licenses/third_party/mslk/external/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/mslk/external/cutlass",
+            "licenses/third_party/mslk/external/cutlass/LICENSE.txt",
+            "licenses/third_party/mslk/external/cutlass/python",
+            "licenses/third_party/mslk/external/cutlass/python/LICENSE.txt",
+            "licenses/third_party/mslk/external/googletest",
+            "licenses/third_party/mslk/external/googletest/LICENSE",
+            "licenses/third_party/mslk/external/hipify_torch",
+            "licenses/third_party/mslk/external/hipify_torch/LICENSE.txt",
+            "licenses/third_party/mslk/mslk",
+            "licenses/third_party/mslk/mslk/attention",
+            "licenses/third_party/mslk/mslk/attention/flash_attn",
+            "licenses/third_party/mslk/mslk/attention/flash_attn/LICENSE",
+            "licenses/third_party/nccl",
+            "licenses/third_party/nccl/LICENSE.txt",
+            "licenses/third_party/nccl/bindings",
+            "licenses/third_party/nccl/bindings/nccl4py",
+            "licenses/third_party/nccl/bindings/nccl4py/LICENSE.txt",
+            "licenses/third_party/onnx",
+            "licenses/third_party/onnx/LICENSE",
+            "licenses/third_party/onnx/third_party",
+            "licenses/third_party/onnx/third_party/pybind11",
+            "licenses/third_party/onnx/third_party/pybind11/LICENSE",
+            "licenses/third_party/protobuf",
+            "licenses/third_party/protobuf/LICENSE",
+            "licenses/third_party/protobuf/third_party",
+            "licenses/third_party/protobuf/third_party/benchmark",
+            "licenses/third_party/protobuf/third_party/benchmark/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest",
+            "licenses/third_party/protobuf/third_party/googletest/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts/generator",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googletest",
+            "licenses/third_party/protobuf/third_party/googletest/googletest/LICENSE",
+            "licenses/third_party/psimd",
+            "licenses/third_party/psimd/LICENSE",
+            "licenses/third_party/pthreadpool",
+            "licenses/third_party/pthreadpool/LICENSE",
+            "licenses/third_party/pybind11",
+            "licenses/third_party/pybind11/LICENSE",
+            "licenses/third_party/python-peachpy",
+            "licenses/third_party/python-peachpy/LICENSE.rst",
+            "licenses/third_party/sleef",
+            "licenses/third_party/sleef/LICENSE.txt",
+            "licenses/third_party/tensorpipe",
+            "licenses/third_party/tensorpipe/LICENSE.txt",
+            "licenses/third_party/tensorpipe/third_party",
+            "licenses/third_party/tensorpipe/third_party/googletest",
+            "licenses/third_party/tensorpipe/third_party/googletest/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts/generator",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googletest",
+            "licenses/third_party/tensorpipe/third_party/googletest/googletest/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/libnop",
+            "licenses/third_party/tensorpipe/third_party/libnop/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/libuv",
+            "licenses/third_party/tensorpipe/third_party/libuv/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/pybind11",
+            "licenses/third_party/tensorpipe/third_party/pybind11/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools/clang",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools/clang/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "torchaudio-2.11.0+cu130.dist-info",
+          "name": "torchaudio",
+          "version": "2.11.0+cu130",
+          "license": "BSD-2-Clause",
+          "license_source": "https://github.com/pytorch/audio/blob/v2.11.0/LICENSE",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "torchsde-0.2.6.dist-info",
+          "name": "torchsde",
+          "version": "0.2.6",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/torchsde/0.2.6/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "torchvision-0.28.0+cu130.dist-info",
+          "name": "torchvision",
+          "version": "0.28.0+cu130",
+          "license": "BSD-3-Clause",
+          "license_source": "https://github.com/pytorch/vision/blob/v0.28.0/LICENSE",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "tqdm-4.70.0.dist-info",
+          "name": "tqdm",
+          "version": "4.70.0",
+          "license": "MPL-2.0 AND MIT",
+          "license_source": "https://pypi.org/pypi/tqdm/4.70.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENCE"
+          ]
+        },
+        {
+          "dist_info": "trampoline-0.1.2.dist-info",
+          "name": "trampoline",
+          "version": "0.1.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/trampoline/0.1.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "transformers-5.14.1.dist-info",
+          "name": "transformers",
+          "version": "5.14.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/transformers/5.14.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typer-0.27.0.dist-info",
+          "name": "typer",
+          "version": "0.27.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/typer/0.27.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typing_extensions-4.16.0.dist-info",
+          "name": "typing-extensions",
+          "version": "4.16.0",
+          "license": "PSF-2.0",
+          "license_source": "https://pypi.org/project/typing_extensions/4.16.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typing_inspection-0.4.2.dist-info",
+          "name": "typing-inspection",
+          "version": "0.4.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/typing_inspection/0.4.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "urllib3-2.7.0.dist-info",
+          "name": "urllib3",
+          "version": "2.7.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/urllib3/2.7.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "yarl-1.24.5.dist-info",
+          "name": "yarl",
+          "version": "1.24.5",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/yarl/1.24.5/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        }
+      ]
+    },
+    "windows-x86_64-nvidia-cu126": {
+      "source_asset_url": "https://github.com/Comfy-Org/ComfyUI/releases/download/v0.30.0/ComfyUI_windows_portable_nvidia_cu126.7z",
+      "source_asset_sha256": "3e4bc720dd68f166ed8af67f4b675ef4826e1912f2bf3a0965909203a526a965",
+      "source_asset_size_bytes": 2052856402,
+      "inventory_count": 89,
+      "inventory_sha256": "09d226f9097d598a256fef80b60b82b59933c5b3ee49197fd1ac5d6473e59cac",
+      "python": "3.12.10 (asset remains blocked; no patched official Windows 3.12 binary exists)",
+      "distributions": [
+        {
+          "dist_info": "aiohappyeyeballs-2.7.1.dist-info",
+          "name": "aiohappyeyeballs",
+          "version": "2.7.1",
+          "license": "PSF-2.0",
+          "license_source": "https://pypi.org/pypi/aiohappyeyeballs/2.7.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "aiohttp-3.14.3.dist-info",
+          "name": "aiohttp",
+          "version": "3.14.3",
+          "license": "Apache-2.0 AND MIT",
+          "license_source": "https://pypi.org/pypi/aiohttp/3.14.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt",
+            "licenses/vendor",
+            "licenses/vendor/llhttp",
+            "licenses/vendor/llhttp/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "aiosignal-1.4.0.dist-info",
+          "name": "aiosignal",
+          "version": "1.4.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/aiosignal/1.4.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "alembic-1.18.5.dist-info",
+          "name": "alembic",
+          "version": "1.18.5",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/alembic/1.18.5/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "annotated_doc-0.0.5.dist-info",
+          "name": "annotated-doc",
+          "version": "0.0.5",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/annotated_doc/0.0.5/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "annotated_types-0.8.0.dist-info",
+          "name": "annotated-types",
+          "version": "0.8.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/annotated_types/0.8.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "anyio-4.14.2.dist-info",
+          "name": "anyio",
+          "version": "4.14.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/anyio/4.14.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "attrs-26.1.0.dist-info",
+          "name": "attrs",
+          "version": "26.1.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/attrs/26.1.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "av-18.0.0.dist-info",
+          "name": "av",
+          "version": "18.0.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/av/18.0.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.py",
+            "licenses/AUTHORS.rst",
+            "licenses/LICENSE.txt",
+            "licenses/__pycache__",
+            "licenses/__pycache__/AUTHORS.cpython-312.pyc"
+          ]
+        },
+        {
+          "dist_info": "blake3-1.0.9.dist-info",
+          "name": "blake3",
+          "version": "1.0.9",
+          "license": "CC0-1.0 OR Apache-2.0",
+          "license_source": "https://pypi.org/pypi/blake3/1.0.9/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "certifi-2026.7.22.dist-info",
+          "name": "certifi",
+          "version": "2026.7.22",
+          "license": "MPL-2.0",
+          "license_source": "https://pypi.org/pypi/certifi/2026.7.22/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "cffi-2.1.0.dist-info",
+          "name": "cffi",
+          "version": "2.1.0",
+          "license": "MIT-0",
+          "license_source": "https://pypi.org/project/cffi/2.1.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "charset_normalizer-3.4.9.dist-info",
+          "name": "charset-normalizer",
+          "version": "3.4.9",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/charset-normalizer/3.4.9/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "click-8.4.2.dist-info",
+          "name": "click",
+          "version": "8.4.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/click/8.4.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "colorama-0.4.6.dist-info",
+          "name": "colorama",
+          "version": "0.4.6",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/colorama/0.4.6/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "comfy_aimdo-0.4.11.dist-info",
+          "name": "comfy-aimdo",
+          "version": "0.4.11",
+          "license": "GPL-3.0-only",
+          "license_source": "https://github.com/Comfy-Org/comfy-aimdo/blob/v0.4.11/LICENSE",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfy_angle-0.1.0.dist-info",
+          "name": "comfy-angle",
+          "version": "0.1.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/comfy_angle/0.1.0/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfy_kitchen-0.2.26.dist-info",
+          "name": "comfy-kitchen",
+          "version": "0.2.26",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/comfy_kitchen/0.2.26/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_embedded_docs-0.5.9.dist-info",
+          "name": "comfyui-embedded-docs",
+          "version": "0.5.9",
+          "license": "GPL-3.0",
+          "license_source": "https://pypi.org/project/comfyui_embedded_docs/0.5.9/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_frontend_package-1.47.11.dist-info",
+          "name": "comfyui-frontend-package",
+          "version": "1.47.11",
+          "license": "GPL-3.0-only",
+          "license_source": "https://github.com/Comfy-Org/ComfyUI_frontend/blob/v1.47.11/LICENSE",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates-0.11.27.dist-info",
+          "name": "comfyui-workflow-templates",
+          "version": "0.11.27",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/comfyui_workflow_templates/0.11.27/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_core-0.3.292.dist-info",
+          "name": "comfyui-workflow-templates-core",
+          "version": "0.3.292",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_core/0.3.292/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_json-0.1.27.dist-info",
+          "name": "comfyui-workflow-templates-json",
+          "version": "0.1.27",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_json/0.1.27/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_api-0.3.84.dist-info",
+          "name": "comfyui-workflow-templates-media-api",
+          "version": "0.3.84",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_api/0.3.84/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_assets_01-0.1.17.dist-info",
+          "name": "comfyui-workflow-templates-media-assets-01",
+          "version": "0.1.17",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_assets_01/0.1.17/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_image-0.3.160.dist-info",
+          "name": "comfyui-workflow-templates-media-image",
+          "version": "0.3.160",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_image/0.3.160/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_other-0.3.229.dist-info",
+          "name": "comfyui-workflow-templates-media-other",
+          "version": "0.3.229",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_other/0.3.229/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "comfyui_workflow_templates_media_video-0.3.101.dist-info",
+          "name": "comfyui-workflow-templates-media-video",
+          "version": "0.3.101",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/comfyui_workflow_templates_media_video/0.3.101/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "einops-0.8.2.dist-info",
+          "name": "einops",
+          "version": "0.8.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/einops/0.8.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "filelock-3.32.0.dist-info",
+          "name": "filelock",
+          "version": "3.32.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/filelock/3.32.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "frozenlist-1.8.0.dist-info",
+          "name": "frozenlist",
+          "version": "1.8.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/frozenlist/1.8.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "fsspec-2026.7.0.dist-info",
+          "name": "fsspec",
+          "version": "2026.7.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/fsspec/2026.7.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "greenlet-3.5.4.dist-info",
+          "name": "greenlet",
+          "version": "3.5.4",
+          "license": "MIT AND PSF-2.0",
+          "license_source": "https://pypi.org/project/greenlet/3.5.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.PSF"
+          ]
+        },
+        {
+          "dist_info": "h11-0.16.0.dist-info",
+          "name": "h11",
+          "version": "0.16.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/h11/0.16.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "hf_xet-1.5.2.dist-info",
+          "name": "hf-xet",
+          "version": "1.5.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/project/hf_xet/1.5.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "httpcore-1.0.9.dist-info",
+          "name": "httpcore",
+          "version": "1.0.9",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/httpcore/1.0.9/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "httpx-0.28.1.dist-info",
+          "name": "httpx",
+          "version": "0.28.1",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/httpx/0.28.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "huggingface_hub-1.25.1.dist-info",
+          "name": "huggingface-hub",
+          "version": "1.25.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/huggingface_hub/1.25.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "idna-3.18.dist-info",
+          "name": "idna",
+          "version": "3.18",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/idna/3.18/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "jinja2-3.1.6.dist-info",
+          "name": "jinja2",
+          "version": "3.1.6",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/jinja2/3.1.6/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "kornia-0.8.3.dist-info",
+          "name": "kornia",
+          "version": "0.8.3",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/kornia/0.8.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "kornia_rs-0.1.14.dist-info",
+          "name": "kornia-rs",
+          "version": "0.1.14",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/kornia-rs/0.1.14/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "mako-1.3.12.dist-info",
+          "name": "mako",
+          "version": "1.3.12",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/mako/1.3.12/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "markdown_it_py-4.2.0.dist-info",
+          "name": "markdown-it-py",
+          "version": "4.2.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.markdown-it"
+          ]
+        },
+        {
+          "dist_info": "markupsafe-3.0.3.dist-info",
+          "name": "markupsafe",
+          "version": "3.0.3",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/markupsafe/3.0.3/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "mdurl-0.1.2.dist-info",
+          "name": "mdurl",
+          "version": "0.1.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/mdurl/0.1.2/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "mpmath-1.3.0.dist-info",
+          "name": "mpmath",
+          "version": "1.3.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/mpmath/1.3.0/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "multidict-6.7.1.dist-info",
+          "name": "multidict",
+          "version": "6.7.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/multidict/6.7.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "networkx-3.6.1.dist-info",
+          "name": "networkx",
+          "version": "3.6.1",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/networkx/3.6.1/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "numpy-2.5.1.dist-info",
+          "name": "numpy",
+          "version": "2.5.1",
+          "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+          "license_source": "https://pypi.org/project/numpy/2.5.1/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt",
+            "licenses/numpy",
+            "licenses/numpy/_core",
+            "licenses/numpy/_core/include",
+            "licenses/numpy/_core/include/numpy",
+            "licenses/numpy/_core/include/numpy/libdivide",
+            "licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+            "licenses/numpy/_core/src",
+            "licenses/numpy/_core/src/common",
+            "licenses/numpy/_core/src/common/pythoncapi-compat",
+            "licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+            "licenses/numpy/_core/src/highway",
+            "licenses/numpy/_core/src/highway/LICENSE",
+            "licenses/numpy/_core/src/multiarray",
+            "licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+            "licenses/numpy/_core/src/npysort",
+            "licenses/numpy/_core/src/npysort/x86-simd-sort",
+            "licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+            "licenses/numpy/_core/src/umath",
+            "licenses/numpy/_core/src/umath/svml",
+            "licenses/numpy/_core/src/umath/svml/LICENSE",
+            "licenses/numpy/fft",
+            "licenses/numpy/fft/pocketfft",
+            "licenses/numpy/fft/pocketfft/LICENSE.md",
+            "licenses/numpy/linalg",
+            "licenses/numpy/linalg/lapack_lite",
+            "licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+            "licenses/numpy/ma",
+            "licenses/numpy/ma/LICENSE",
+            "licenses/numpy/random",
+            "licenses/numpy/random/LICENSE.md",
+            "licenses/numpy/random/src",
+            "licenses/numpy/random/src/distributions",
+            "licenses/numpy/random/src/distributions/LICENSE.md",
+            "licenses/numpy/random/src/mt19937",
+            "licenses/numpy/random/src/mt19937/LICENSE.md",
+            "licenses/numpy/random/src/pcg64",
+            "licenses/numpy/random/src/pcg64/LICENSE.md",
+            "licenses/numpy/random/src/philox",
+            "licenses/numpy/random/src/philox/LICENSE.md",
+            "licenses/numpy/random/src/sfc64",
+            "licenses/numpy/random/src/sfc64/LICENSE.md",
+            "licenses/numpy/random/src/splitmix64",
+            "licenses/numpy/random/src/splitmix64/LICENSE.md"
+          ]
+        },
+        {
+          "dist_info": "packaging-26.2.dist-info",
+          "name": "packaging",
+          "version": "26.2",
+          "license": "Apache-2.0 OR BSD-2-Clause",
+          "license_source": "https://pypi.org/project/packaging/26.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/LICENSE.APACHE",
+            "licenses/LICENSE.BSD"
+          ]
+        },
+        {
+          "dist_info": "pillow-12.3.0.dist-info",
+          "name": "pillow",
+          "version": "12.3.0",
+          "license": "MIT-CMU",
+          "license_source": "https://pypi.org/project/pillow/12.3.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pip-26.2.dist-info",
+          "name": "pip",
+          "version": "26.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pip/26.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.txt",
+            "licenses/LICENSE.txt",
+            "licenses/src",
+            "licenses/src/pip",
+            "licenses/src/pip/_vendor",
+            "licenses/src/pip/_vendor/cachecontrol",
+            "licenses/src/pip/_vendor/cachecontrol/LICENSE.txt",
+            "licenses/src/pip/_vendor/certifi",
+            "licenses/src/pip/_vendor/certifi/LICENSE",
+            "licenses/src/pip/_vendor/distlib",
+            "licenses/src/pip/_vendor/distlib/LICENSE.txt",
+            "licenses/src/pip/_vendor/distro",
+            "licenses/src/pip/_vendor/distro/LICENSE",
+            "licenses/src/pip/_vendor/idna",
+            "licenses/src/pip/_vendor/idna/LICENSE.md",
+            "licenses/src/pip/_vendor/msgpack",
+            "licenses/src/pip/_vendor/msgpack/COPYING",
+            "licenses/src/pip/_vendor/packaging",
+            "licenses/src/pip/_vendor/packaging/LICENSE",
+            "licenses/src/pip/_vendor/packaging/LICENSE.APACHE",
+            "licenses/src/pip/_vendor/packaging/LICENSE.BSD",
+            "licenses/src/pip/_vendor/pkg_resources",
+            "licenses/src/pip/_vendor/pkg_resources/LICENSE",
+            "licenses/src/pip/_vendor/platformdirs",
+            "licenses/src/pip/_vendor/platformdirs/LICENSE",
+            "licenses/src/pip/_vendor/pygments",
+            "licenses/src/pip/_vendor/pygments/LICENSE",
+            "licenses/src/pip/_vendor/pyproject_hooks",
+            "licenses/src/pip/_vendor/pyproject_hooks/LICENSE",
+            "licenses/src/pip/_vendor/requests",
+            "licenses/src/pip/_vendor/requests/LICENSE",
+            "licenses/src/pip/_vendor/resolvelib",
+            "licenses/src/pip/_vendor/resolvelib/LICENSE",
+            "licenses/src/pip/_vendor/rich",
+            "licenses/src/pip/_vendor/rich/LICENSE",
+            "licenses/src/pip/_vendor/tomli",
+            "licenses/src/pip/_vendor/tomli/LICENSE",
+            "licenses/src/pip/_vendor/tomli_w",
+            "licenses/src/pip/_vendor/tomli_w/LICENSE",
+            "licenses/src/pip/_vendor/truststore",
+            "licenses/src/pip/_vendor/truststore/LICENSE",
+            "licenses/src/pip/_vendor/urllib3",
+            "licenses/src/pip/_vendor/urllib3/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "propcache-0.5.2.dist-info",
+          "name": "propcache",
+          "version": "0.5.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/propcache/0.5.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "psutil-7.2.2.dist-info",
+          "name": "psutil",
+          "version": "7.2.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/psutil/7.2.2/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pycparser-3.0.dist-info",
+          "name": "pycparser",
+          "version": "3.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/project/pycparser/3.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic-2.13.4.dist-info",
+          "name": "pydantic",
+          "version": "2.13.4",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic/2.13.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic_core-2.46.4.dist-info",
+          "name": "pydantic-core",
+          "version": "2.46.4",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic_core/2.46.4/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pydantic_settings-2.14.2.dist-info",
+          "name": "pydantic-settings",
+          "version": "2.14.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/pydantic_settings/2.14.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pygit2-1.19.3.dist-info",
+          "name": "pygit2",
+          "version": "1.19.3",
+          "license": "GPL-2.0-only WITH LicenseRef-libgit2-linking-exception",
+          "license_source": "https://pypi.org/pypi/pygit2/1.19.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS.md",
+            "licenses/COPYING"
+          ]
+        },
+        {
+          "dist_info": "pygments-2.20.0.dist-info",
+          "name": "pygments",
+          "version": "2.20.0",
+          "license": "BSD-2-Clause",
+          "license_source": "https://pypi.org/project/pygments/2.20.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pyopengl-3.1.10.dist-info",
+          "name": "pyopengl",
+          "version": "3.1.10",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/pyopengl/3.1.10/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "python_dotenv-1.2.2.dist-info",
+          "name": "python-dotenv",
+          "version": "1.2.2",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/python-dotenv/1.2.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "pyyaml-6.0.3.dist-info",
+          "name": "pyyaml",
+          "version": "6.0.3",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/pyyaml/6.0.3/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "regex-2026.7.19.dist-info",
+          "name": "regex",
+          "version": "2026.7.19",
+          "license": "Apache-2.0 AND CNRI-Python",
+          "license_source": "https://pypi.org/project/regex/2026.7.19/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "requests-2.34.2.dist-info",
+          "name": "requests",
+          "version": "2.34.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/requests/2.34.2/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        },
+        {
+          "dist_info": "rich-15.0.0.dist-info",
+          "name": "rich",
+          "version": "15.0.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/rich/15.0.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "safetensors-0.8.0.dist-info",
+          "name": "safetensors",
+          "version": "0.8.0",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/safetensors/0.8.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "scipy-1.18.0.dist-info",
+          "name": "scipy",
+          "version": "1.18.0",
+          "license": "BSD-3-Clause; bundled third-party license notices retained in the pinned wheel",
+          "license_source": "https://pypi.org/pypi/scipy/1.18.0/json",
+          "indexed_license_files": [
+            "LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "sentencepiece-0.2.2.dist-info",
+          "name": "sentencepiece",
+          "version": "0.2.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/project/sentencepiece/0.2.2/",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "setuptools-83.0.0.dist-info",
+          "name": "setuptools",
+          "version": "83.0.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/setuptools/83.0.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "shellingham-1.5.4.dist-info",
+          "name": "shellingham",
+          "version": "1.5.4",
+          "license": "ISC",
+          "license_source": "https://pypi.org/pypi/shellingham/1.5.4/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "simpleeval-1.0.7.dist-info",
+          "name": "simpleeval",
+          "version": "1.0.7",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/simpleeval/1.0.7/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENCE"
+          ]
+        },
+        {
+          "dist_info": "spandrel-0.4.2.dist-info",
+          "name": "spandrel",
+          "version": "0.4.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/spandrel/0.4.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "sqlalchemy-2.0.51.dist-info",
+          "name": "sqlalchemy",
+          "version": "2.0.51",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/sqlalchemy/2.0.51/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "sympy-1.14.0.dist-info",
+          "name": "sympy",
+          "version": "1.14.0",
+          "license": "BSD-3-Clause",
+          "license_source": "https://pypi.org/pypi/sympy/1.14.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/AUTHORS",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "tokenizers-0.22.2.dist-info",
+          "name": "tokenizers",
+          "version": "0.22.2",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/tokenizers/0.22.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "torch-2.13.0+cu126.dist-info",
+          "name": "torch",
+          "version": "2.13.0+cu126",
+          "license": "Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT",
+          "license_source": "https://pypi.org/project/torch/2.13.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/third_party",
+            "licenses/third_party/FP16",
+            "licenses/third_party/FP16/LICENSE",
+            "licenses/third_party/FXdiv",
+            "licenses/third_party/FXdiv/LICENSE",
+            "licenses/third_party/NNPACK",
+            "licenses/third_party/NNPACK/LICENSE",
+            "licenses/third_party/NVTX",
+            "licenses/third_party/NVTX/LICENSE.txt",
+            "licenses/third_party/NVTX/docs",
+            "licenses/third_party/NVTX/docs/LICENSE.txt",
+            "licenses/third_party/NVTX/python",
+            "licenses/third_party/NVTX/python/LICENSE.txt",
+            "licenses/third_party/NVTX/tools",
+            "licenses/third_party/NVTX/tools/docs",
+            "licenses/third_party/NVTX/tools/docs/github-markdown-css",
+            "licenses/third_party/NVTX/tools/docs/github-markdown-css/LICENSE",
+            "licenses/third_party/VulkanMemoryAllocator",
+            "licenses/third_party/VulkanMemoryAllocator/LICENSE.txt",
+            "licenses/third_party/XNNPACK",
+            "licenses/third_party/XNNPACK/LICENSE",
+            "licenses/third_party/aiter",
+            "licenses/third_party/aiter/3rdparty",
+            "licenses/third_party/aiter/3rdparty/composable_kernel",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/docs",
+            "licenses/third_party/aiter/3rdparty/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/aiter/LICENSE",
+            "licenses/third_party/benchmark",
+            "licenses/third_party/benchmark/LICENSE",
+            "licenses/third_party/composable_kernel",
+            "licenses/third_party/composable_kernel/LICENSE",
+            "licenses/third_party/composable_kernel/docs",
+            "licenses/third_party/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/cpp-httplib",
+            "licenses/third_party/cpp-httplib/LICENSE",
+            "licenses/third_party/cpuinfo",
+            "licenses/third_party/cpuinfo/LICENSE",
+            "licenses/third_party/cpuinfo/deps",
+            "licenses/third_party/cpuinfo/deps/clog",
+            "licenses/third_party/cpuinfo/deps/clog/LICENSE",
+            "licenses/third_party/cudnn_frontend",
+            "licenses/third_party/cudnn_frontend/LICENSE.txt",
+            "licenses/third_party/cutlass",
+            "licenses/third_party/cutlass/LICENSE.txt",
+            "licenses/third_party/cutlass/python",
+            "licenses/third_party/cutlass/python/LICENSE.txt",
+            "licenses/third_party/fbgemm",
+            "licenses/third_party/fbgemm/LICENSE",
+            "licenses/third_party/fbgemm/external",
+            "licenses/third_party/fbgemm/external/composable_kernel",
+            "licenses/third_party/fbgemm/external/composable_kernel/LICENSE",
+            "licenses/third_party/fbgemm/external/composable_kernel/docs",
+            "licenses/third_party/fbgemm/external/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/fbgemm/external/cpuinfo",
+            "licenses/third_party/fbgemm/external/cpuinfo/LICENSE",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps/clog",
+            "licenses/third_party/fbgemm/external/cpuinfo/deps/clog/LICENSE",
+            "licenses/third_party/fbgemm/external/cutlass",
+            "licenses/third_party/fbgemm/external/cutlass/LICENSE.txt",
+            "licenses/third_party/fbgemm/external/cutlass/python",
+            "licenses/third_party/fbgemm/external/cutlass/python/LICENSE.txt",
+            "licenses/third_party/fbgemm/external/googletest",
+            "licenses/third_party/fbgemm/external/googletest/LICENSE",
+            "licenses/third_party/fbgemm/external/hipify_torch",
+            "licenses/third_party/fbgemm/external/hipify_torch/LICENSE.txt",
+            "licenses/third_party/fbgemm/fbgemm_gpu",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src/general",
+            "licenses/third_party/fbgemm/fbgemm_gpu/docs/src/general/LICENSE.rst",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental/hstu",
+            "licenses/third_party/fbgemm/fbgemm_gpu/experimental/hstu/LICENSE",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops/mx",
+            "licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops/mx/LICENSE",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize/mx",
+            "licenses/third_party/fbgemm/fbgemm_gpu/test/quantize/mx/LICENSE",
+            "licenses/third_party/flash-attention",
+            "licenses/third_party/flash-attention/LICENSE",
+            "licenses/third_party/flash-attention/csrc",
+            "licenses/third_party/flash-attention/csrc/composable_kernel",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/LICENSE",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/docs",
+            "licenses/third_party/flash-attention/csrc/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/flash-attention/csrc/cutlass",
+            "licenses/third_party/flash-attention/csrc/cutlass/LICENSE.txt",
+            "licenses/third_party/flash-attention/csrc/cutlass/python",
+            "licenses/third_party/flash-attention/csrc/cutlass/python/LICENSE.txt",
+            "licenses/third_party/flash-attention/flash_attn",
+            "licenses/third_party/flash-attention/flash_attn/cute",
+            "licenses/third_party/flash-attention/flash_attn/cute/LICENSE",
+            "licenses/third_party/flash-attention/third_party",
+            "licenses/third_party/flash-attention/third_party/aiter",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/docs",
+            "licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/flash-attention/third_party/aiter/LICENSE",
+            "licenses/third_party/flatbuffers",
+            "licenses/third_party/flatbuffers/LICENSE",
+            "licenses/third_party/flatbuffers/dart",
+            "licenses/third_party/flatbuffers/dart/LICENSE",
+            "licenses/third_party/flatbuffers/swift",
+            "licenses/third_party/flatbuffers/swift/LICENSE",
+            "licenses/third_party/fmt",
+            "licenses/third_party/fmt/LICENSE",
+            "licenses/third_party/gemmlowp",
+            "licenses/third_party/gemmlowp/gemmlowp",
+            "licenses/third_party/gemmlowp/gemmlowp/LICENSE",
+            "licenses/third_party/gloo",
+            "licenses/third_party/gloo/LICENSE",
+            "licenses/third_party/googletest",
+            "licenses/third_party/googletest/LICENSE",
+            "licenses/third_party/ideep",
+            "licenses/third_party/ideep/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn",
+            "licenses/third_party/ideep/mkl-dnn/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn/third_party",
+            "licenses/third_party/ideep/mkl-dnn/third_party/gtest",
+            "licenses/third_party/ideep/mkl-dnn/third_party/gtest/LICENSE",
+            "licenses/third_party/ideep/mkl-dnn/third_party/opencl",
+            "licenses/third_party/ideep/mkl-dnn/third_party/opencl/LICENSE",
+            "licenses/third_party/kineto",
+            "licenses/third_party/kineto/LICENSE",
+            "licenses/third_party/kineto/libkineto",
+            "licenses/third_party/kineto/libkineto/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty/colorama",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty/colorama/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/test",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/test/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/fmt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/fmt/LICENSE.rst",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/googletest/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty/doctest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty/doctest/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party/cpplint",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party/cpplint/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/pfs",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/pfs/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest/cJSON",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest/cJSON/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.5.2",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.5.2/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.8.0",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.8.0/LICENSE.txt",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts/generator",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/fmt",
+            "licenses/third_party/kineto/libkineto/third_party/fmt/LICENSE",
+            "licenses/third_party/kineto/libkineto/third_party/googletest",
+            "licenses/third_party/kineto/libkineto/third_party/googletest/LICENSE",
+            "licenses/third_party/llvm-openmp",
+            "licenses/third_party/llvm-openmp/LICENSE.txt",
+            "licenses/third_party/mimalloc",
+            "licenses/third_party/mimalloc/LICENSE",
+            "licenses/third_party/miniz-3.0.2",
+            "licenses/third_party/miniz-3.0.2/LICENSE",
+            "licenses/third_party/mslk",
+            "licenses/third_party/mslk/LICENSE",
+            "licenses/third_party/mslk/external",
+            "licenses/third_party/mslk/external/composable_kernel",
+            "licenses/third_party/mslk/external/composable_kernel/LICENSE",
+            "licenses/third_party/mslk/external/composable_kernel/docs",
+            "licenses/third_party/mslk/external/composable_kernel/docs/LICENSE.rst",
+            "licenses/third_party/mslk/external/cutlass",
+            "licenses/third_party/mslk/external/cutlass/LICENSE.txt",
+            "licenses/third_party/mslk/external/cutlass/python",
+            "licenses/third_party/mslk/external/cutlass/python/LICENSE.txt",
+            "licenses/third_party/mslk/external/googletest",
+            "licenses/third_party/mslk/external/googletest/LICENSE",
+            "licenses/third_party/mslk/external/hipify_torch",
+            "licenses/third_party/mslk/external/hipify_torch/LICENSE.txt",
+            "licenses/third_party/mslk/mslk",
+            "licenses/third_party/mslk/mslk/attention",
+            "licenses/third_party/mslk/mslk/attention/flash_attn",
+            "licenses/third_party/mslk/mslk/attention/flash_attn/LICENSE",
+            "licenses/third_party/nccl",
+            "licenses/third_party/nccl/LICENSE.txt",
+            "licenses/third_party/nccl/nccl4py",
+            "licenses/third_party/nccl/nccl4py/LICENSE.txt",
+            "licenses/third_party/onnx",
+            "licenses/third_party/onnx/LICENSE",
+            "licenses/third_party/onnx/third_party",
+            "licenses/third_party/onnx/third_party/pybind11",
+            "licenses/third_party/onnx/third_party/pybind11/LICENSE",
+            "licenses/third_party/protobuf",
+            "licenses/third_party/protobuf/LICENSE",
+            "licenses/third_party/protobuf/third_party",
+            "licenses/third_party/protobuf/third_party/benchmark",
+            "licenses/third_party/protobuf/third_party/benchmark/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest",
+            "licenses/third_party/protobuf/third_party/googletest/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts/generator",
+            "licenses/third_party/protobuf/third_party/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/protobuf/third_party/googletest/googletest",
+            "licenses/third_party/protobuf/third_party/googletest/googletest/LICENSE",
+            "licenses/third_party/psimd",
+            "licenses/third_party/psimd/LICENSE",
+            "licenses/third_party/pthreadpool",
+            "licenses/third_party/pthreadpool/LICENSE",
+            "licenses/third_party/pybind11",
+            "licenses/third_party/pybind11/LICENSE",
+            "licenses/third_party/python-peachpy",
+            "licenses/third_party/python-peachpy/LICENSE.rst",
+            "licenses/third_party/sleef",
+            "licenses/third_party/sleef/LICENSE.txt",
+            "licenses/third_party/tensorpipe",
+            "licenses/third_party/tensorpipe/LICENSE.txt",
+            "licenses/third_party/tensorpipe/third_party",
+            "licenses/third_party/tensorpipe/third_party/googletest",
+            "licenses/third_party/tensorpipe/third_party/googletest/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts/generator",
+            "licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts/generator/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/googletest/googletest",
+            "licenses/third_party/tensorpipe/third_party/googletest/googletest/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/libnop",
+            "licenses/third_party/tensorpipe/third_party/libnop/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/libuv",
+            "licenses/third_party/tensorpipe/third_party/libuv/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/pybind11",
+            "licenses/third_party/tensorpipe/third_party/pybind11/LICENSE",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools/clang",
+            "licenses/third_party/tensorpipe/third_party/pybind11/tools/clang/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "torchaudio-2.11.0+cu126.dist-info",
+          "name": "torchaudio",
+          "version": "2.11.0+cu126",
+          "license": "BSD-2-Clause",
+          "license_source": "https://github.com/pytorch/audio/blob/v2.11.0/LICENSE",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "torchsde-0.2.6.dist-info",
+          "name": "torchsde",
+          "version": "0.2.6",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/torchsde/0.2.6/json",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "torchvision-0.28.0+cu126.dist-info",
+          "name": "torchvision",
+          "version": "0.28.0+cu126",
+          "license": "BSD-3-Clause",
+          "license_source": "https://github.com/pytorch/vision/blob/v0.28.0/LICENSE",
+          "indexed_license_files": [
+            "LICENSE"
+          ]
+        },
+        {
+          "dist_info": "tqdm-4.70.0.dist-info",
+          "name": "tqdm",
+          "version": "4.70.0",
+          "license": "MPL-2.0 AND MIT",
+          "license_source": "https://pypi.org/pypi/tqdm/4.70.0/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENCE"
+          ]
+        },
+        {
+          "dist_info": "trampoline-0.1.2.dist-info",
+          "name": "trampoline",
+          "version": "0.1.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/pypi/trampoline/0.1.2/json",
+          "indexed_license_files": []
+        },
+        {
+          "dist_info": "transformers-5.14.1.dist-info",
+          "name": "transformers",
+          "version": "5.14.1",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/transformers/5.14.1/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typer-0.27.0.dist-info",
+          "name": "typer",
+          "version": "0.27.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/typer/0.27.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typing_extensions-4.16.0.dist-info",
+          "name": "typing-extensions",
+          "version": "4.16.0",
+          "license": "PSF-2.0",
+          "license_source": "https://pypi.org/project/typing_extensions/4.16.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "typing_inspection-0.4.2.dist-info",
+          "name": "typing-inspection",
+          "version": "0.4.2",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/typing_inspection/0.4.2/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE"
+          ]
+        },
+        {
+          "dist_info": "urllib3-2.7.0.dist-info",
+          "name": "urllib3",
+          "version": "2.7.0",
+          "license": "MIT",
+          "license_source": "https://pypi.org/project/urllib3/2.7.0/",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE.txt"
+          ]
+        },
+        {
+          "dist_info": "yarl-1.24.5.dist-info",
+          "name": "yarl",
+          "version": "1.24.5",
+          "license": "Apache-2.0",
+          "license_source": "https://pypi.org/pypi/yarl/1.24.5/json",
+          "indexed_license_files": [
+            "licenses",
+            "licenses/LICENSE",
+            "licenses/NOTICE"
+          ]
+        }
+      ]
+    }
+  }
+}

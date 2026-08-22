@@ -45,6 +45,10 @@ from .media_organization_schema import (
     CREATE_MEDIA_ORGANIZATION_TRIGGER_SQL,
     DROP_MEDIA_ORGANIZATION_TRIGGER_SQL,
 )
+from .reference_review_schema import (
+    CREATE_REFERENCE_REVIEW_TRIGGER_SQL,
+    DROP_REFERENCE_REVIEW_TRIGGER_SQL,
+)
 
 
 def _lowercase_sha256_check(column: str) -> str:
@@ -632,6 +636,18 @@ for _statement in CREATE_MEDIA_ORGANIZATION_TRIGGER_SQL:
         _install_sqlite_trigger(_statement),
     )
 for _statement in DROP_MEDIA_ORGANIZATION_TRIGGER_SQL:
+    event.listen(
+        Base.metadata,
+        "before_drop",
+        DDL(_statement).execute_if(dialect="sqlite"),  # type: ignore[no-untyped-call]
+    )
+for _statement in CREATE_REFERENCE_REVIEW_TRIGGER_SQL:
+    event.listen(
+        Base.metadata,
+        "after_create",
+        _install_sqlite_trigger(_statement),
+    )
+for _statement in DROP_REFERENCE_REVIEW_TRIGGER_SQL:
     event.listen(
         Base.metadata,
         "before_drop",
@@ -1647,6 +1663,7 @@ class ReferenceAsset(TimestampMixin, Base):
         # name, and autogenerate would propose renaming them on real data.
         Index("ix_reference_assets_subject", "reference_subject_id"),
         Index("ix_reference_assets_artifact", "artifact_id"),
+        CheckConstraint("review_version > 0", name="ck_reference_asset_review_version"),
     )
 
     id: Mapped[str] = mapped_column(
@@ -1668,8 +1685,48 @@ class ReferenceAsset(TimestampMixin, Base):
     validation_reasons_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     width: Mapped[int | None] = mapped_column(Integer, nullable=True)
     height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Version 1 means unchecked. The first and only decision advances it to 2.
+    review_version: Mapped[int] = mapped_column(Integer, default=1)
 
     subject: Mapped[ReferenceSubject] = relationship(back_populates="assets")
+
+
+class ReferenceAssetReviewEvent(Base):
+    """One immutable human decision over exact retained artifact bytes."""
+
+    __tablename__ = "reference_asset_review_events"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_asset_id", "result_version", name="uq_reference_asset_review_version"
+        ),
+        CheckConstraint("expected_version > 0", name="ck_reference_review_expected_version"),
+        CheckConstraint(
+            "result_version = expected_version + 1", name="ck_reference_review_result_version"
+        ),
+        CheckConstraint("width > 0 AND height > 0", name="ck_reference_review_dimensions"),
+        CheckConstraint(
+            _lowercase_sha256_check("artifact_sha256"), name="ck_reference_review_artifact_sha256"
+        ),
+        CheckConstraint(
+            _lowercase_sha256_check("decision_sha256"), name="ck_reference_review_decision_sha256"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(88), primary_key=True)
+    # A snapshot, not a foreign key: detach must not erase the review history.
+    reference_asset_id: Mapped[str] = mapped_column(String(48), index=True)
+    artifact_id: Mapped[str] = mapped_column(String(80))
+    artifact_sha256: Mapped[str] = mapped_column(String(64))
+    reviewer_kind: Mapped[str] = mapped_column(String(32))
+    expected_state: Mapped[str] = mapped_column(String(30))
+    expected_version: Mapped[int] = mapped_column(Integer)
+    result_version: Mapped[int] = mapped_column(Integer)
+    decision: Mapped[str] = mapped_column(String(30))
+    reasons_json: Mapped[list[str]] = mapped_column(JSON)
+    width: Mapped[int] = mapped_column(Integer)
+    height: Mapped[int] = mapped_column(Integer)
+    decision_sha256: Mapped[str] = mapped_column(String(64), unique=True)
+    reviewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class MessageReference(TimestampMixin, Base):

@@ -180,7 +180,7 @@ vi.mock("./api", () => ({
       },
     }),
     about: vi.fn().mockResolvedValue({
-      version: "0.1.7",
+      max_media_outputs_per_plan: 8, version: "0.1.7",
       data_directory: "C:\\LM Atelier\\data",
       log_directory: "C:\\LM Atelier\\data\\logs",
     }),
@@ -1988,7 +1988,7 @@ describe("App", () => {
 
   it("shows support paths and copies only allowlisted technical details", async () => {
     vi.mocked(api.about).mockResolvedValue({
-      version: "0.1.7",
+      max_media_outputs_per_plan: 8, version: "0.1.7",
       data_directory: "C:\\Users\\someone\\LM Atelier\\data",
       log_directory: "C:\\Users\\someone\\LM Atelier\\data\\logs",
       web_access_enabled: false,
