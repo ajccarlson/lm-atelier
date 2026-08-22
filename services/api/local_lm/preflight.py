@@ -11,6 +11,12 @@ from .gguf import (
     automatic_mmproj_selection,
     validate_gguf_selection,
 )
+from .hardware_fit import (
+    FitRequirements,
+    HardwareFit,
+    capacity_from_system_info,
+    recommend_hardware_fit,
+)
 from .schemas import (
     CatalogDetail,
     CatalogFileSource,
@@ -694,33 +700,13 @@ def assess_catalog_install(
         if download_bytes and (request.role != "chat" or request.engine == "vllm")
         else None
     )
-    accelerators = [device for device in system.devices if device.kind != "cpu"]
-    available_accelerator = max(
-        (device.available_memory_bytes or 0 for device in accelerators), default=0
+    hardware_fit = assess_preflight_hardware_fit(
+        request,
+        system,
+        estimated_ram_bytes=estimated_ram,
+        estimated_vram_bytes=estimated_vram,
     )
-    if request.role == "chat" and request.engine != "vllm" and estimated_ram:
-        memory_status: Literal["pass", "warn", "block"] = (
-            "pass" if estimated_ram <= system.memory_total_bytes else "warn"
-        )
-        memory_detail = (
-            "Estimated loaded size fits total system memory."
-            if memory_status == "pass"
-            else (
-                "Estimated loaded size exceeds total system memory; "
-                "a smaller quantization is advised."
-            )
-        )
-    elif estimated_vram and available_accelerator:
-        memory_status = "pass" if estimated_vram <= available_accelerator else "warn"
-        memory_detail = (
-            "Estimated loaded size fits currently available accelerator memory."
-            if memory_status == "pass"
-            else "Estimated loaded size exceeds currently available accelerator memory."
-        )
-    else:
-        memory_status = "warn"
-        memory_detail = "No accelerator memory was detected; accelerated generation may fail."
-    checks.append(_check("memory", "Memory estimate", memory_status, memory_detail))
+    checks.append(_hardware_fit_check(hardware_fit))
 
     checks.append(
         _check(
@@ -750,6 +736,46 @@ def assess_catalog_install(
         auxiliary_kind=request.auxiliary_kind,
         content_rating=detail.model.content_rating,
     )
+
+
+def assess_preflight_hardware_fit(
+    request: CatalogPreflightRequest,
+    system: SystemInfo,
+    *,
+    estimated_ram_bytes: int | None,
+    estimated_vram_bytes: int | None,
+) -> HardwareFit:
+    """Assess calculated catalog fit without turning an estimate into a block."""
+
+    return recommend_hardware_fit(
+        capacity_from_system_info(system, runtime_backends=(request.engine,)),
+        FitRequirements(
+            estimated_system_memory_bytes=estimated_ram_bytes,
+            estimated_accelerator_memory_bytes=estimated_vram_bytes,
+        ),
+    )
+
+
+def _hardware_fit_check(fit: HardwareFit) -> CatalogPreflightCheck:
+    status: Literal["pass", "warn", "block"]
+    if fit.status == "unsupported":
+        status = "block"
+    elif fit.status in {"recommended", "likely"}:
+        status = "pass"
+    else:
+        status = "warn"
+    headline = {
+        "recommended": "Recommended fit.",
+        "likely": "Likely fit.",
+        "tight": "Tight fit.",
+        "unsupported": "Unsupported by declared hardware requirements.",
+        "unknown": "Hardware fit is unknown.",
+    }[fit.status]
+    reason_text = " ".join(reason.message for reason in fit.reasons if reason.severity != "info")
+    if not reason_text:
+        reason_text = " ".join(reason.message for reason in fit.reasons)
+    detail = f"{headline} {reason_text}".strip()
+    return _check("memory", "Hardware fit", status, detail)
 
 
 def _check(
