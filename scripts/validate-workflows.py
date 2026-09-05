@@ -593,7 +593,10 @@ EVENT_HEAD_SHA = event_expression("head_sha", "github.event.pull_request.head.sh
 EVENT_BASE_SHA = event_expression("base_sha", "github.event.pull_request.base.sha")
 EVENT_BASE_REF = event_expression("base_ref", "github.base_ref")
 EVENT_HEAD_REF = event_expression("head_ref", "github.head_ref")
-VERIFICATION_REF = event_expression("head_sha", "github.sha")
+VERIFICATION_REF = event_expression(
+    "head_sha",
+    "github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha",
+)
 
 # The whole job, declared rather than sampled. Six rounds of review on this file
 # established that any check phrased as "the fields I thought of are correct"

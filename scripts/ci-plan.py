@@ -30,6 +30,7 @@ WINDOWS_PATHS = {
     "scripts/verify.ps1",
 }
 WINDOWS_PATH_PREFIXES = (
+    "scripts/",
     "packaging/windows/",
     "services/api/",
 )

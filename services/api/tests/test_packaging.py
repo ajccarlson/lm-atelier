@@ -917,6 +917,11 @@ def test_ci_plan_is_fail_closed_and_audits_dependency_changes() -> None:
     assert requires_windows(["packaging/windows/LMAtelier.iss"])
     assert requires_windows(["packaging/LMAtelier.spec"])
     assert requires_windows(["scripts/verify.ps1"])
+    assert requires_windows(["scripts/machine_lock.py"])
+    assert requires_windows(["scripts/machine-lease.ps1"])
+    assert requires_windows(["scripts/held-pytest-scratch.ps1"])
+    assert requires_windows(["scripts/verify.sh"])
+    assert requires_windows([r".\Scripts\new-helper.py"])
     assert requires_windows([".github/workflows/ci.yml"])
     assert not requires_windows(["apps/web/src/App.tsx"])
     assert not requires_windows(["packaging/linux/frozen-uninstall.sh"])
@@ -971,10 +976,27 @@ def test_ci_plan_requires_exact_protected_develop_promotion(monkeypatch) -> None
     [
         (["docs/ARCHITECTURE.md"], "documentation", "false", "false"),
         (["apps/web/src/App.tsx"], "full", "false", "false"),
+        (["scripts/machine_lock.py"], "full", "false", "true"),
+        (["scripts/machine-lease.ps1"], "full", "false", "true"),
+        (["scripts/held-pytest-scratch.ps1"], "full", "false", "true"),
+        (["scripts/verify.sh"], "full", "false", "true"),
+        (["scripts/new-helper.py"], "full", "false", "true"),
+        (["scripts/README.md"], "documentation", "false", "false"),
         (["services/api/local_lm/api.py"], "full", "false", "true"),
         (["services/api/uv.lock", "docs/ARCHITECTURE.md"], "full", "true", "true"),
     ],
-    ids=["documentation", "web", "api", "combined-dependency"],
+    ids=[
+        "documentation",
+        "web",
+        "machine-lock",
+        "machine-lease",
+        "pytest-scratch",
+        "shell-script",
+        "new-script",
+        "script-documentation",
+        "api",
+        "combined-dependency",
+    ],
 )
 def test_ci_plan_verifies_generated_merge_group_changes(
     tmp_path: Path, monkeypatch, paths: list[str], mode: str, audit: str, windows: str
@@ -2039,6 +2061,19 @@ def _queue_binding_mutations() -> list[tuple[str, object]]:
             ]
         )
     return mutations
+
+
+@pytest.mark.parametrize("job_key", ["verification-plan", "compatibility", "windows-compatibility"])
+def test_workflow_policy_rejects_pull_request_merge_ref(job_key: str) -> None:
+    namespace = _workflow_namespace()
+    path, content, workflow = _shipped_ci()
+    for step in workflow["jobs"][job_key]["steps"]:
+        if str(step.get("uses", "")).startswith("actions/checkout@"):
+            step["with"]["ref"] = (
+                "${{ github.event_name == 'merge_group' && "
+                "github.event.merge_group.head_sha || github.sha }}"
+            )
+    assert namespace["validate_workflow_document"](path, content, workflow)
 
 
 def test_workflow_policy_rejects_merge_group_binding_drift() -> None:
